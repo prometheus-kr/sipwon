@@ -1,0 +1,11 @@
+sipwon:
+  pkcs11-library-path: cryptoki.dll
+  excluded-token-pattern: AdminToken.*
+  target:
+    - token-label: test
+      pin: 1111
+
+logging:
+  level:
+    root: INFO
+    "[io.github.prometheuskr.sipwon]": DEBUG

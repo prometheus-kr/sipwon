@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "sipwon.pkcs11-library-path",
+    "type": "java.lang.String",
+    "description": "A description for 'sipwon.pkcs11-library-path'"
+  },
+  {
+    "name": "sipwon.excluded-token-pattern",
+    "type": "java.lang.String",
+    "description": "A description for 'sipwon.excluded-token-pattern'"
+  },
+  {
+    "name": "sipwon.target",
+    "type": "java.util.List<io.github.prometheuskr.sipwon.config.HsmProperties.TokenPin>",
+    "description": "A description for 'sipwon.target'"
+  }
+]}
