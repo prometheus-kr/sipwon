@@ -1,9 +1,9 @@
 sipwon:
   pkcs11-library-path: cryptoki.dll
-  excluded-token-pattern: AdminToken.*
-  target:
+  token-label-and-pin:
     - token-label: test
       pin: 1111
+  use-cache-key: false
 
 logging:
   level:

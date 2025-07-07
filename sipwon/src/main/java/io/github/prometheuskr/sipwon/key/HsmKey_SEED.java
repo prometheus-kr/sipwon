@@ -22,8 +22,8 @@ public class HsmKey_SEED implements HsmKey {
     private final Session session;
     private final Key key;
 
-    HsmKey_SEED(HsmVendor hsmVendor2, Session session, Key key) {
-        this.hsmVendor = hsmVendor2;
+    HsmKey_SEED(HsmVendor hsmVendor, Session session, Key key) {
+        this.hsmVendor = hsmVendor;
         this.session = session;
         this.key = key;
     }
@@ -78,19 +78,7 @@ public class HsmKey_SEED implements HsmKey {
         log.debug("data to derive: [{}]", data);
 
         String keyValue = encrypt(data, HsmMechanism.SEED_ECB);
-        byte[] keyValueByteArray = Util.hexaString2ByteArray(keyValue);
-
-        GenericSecretKey keyTemplate = new SEEDSecretKeyPTK();
-        keyTemplate.getToken().setBooleanValue(Boolean.FALSE);
-        keyTemplate.getEncrypt().setBooleanValue(Boolean.TRUE);
-        keyTemplate.getDecrypt().setBooleanValue(Boolean.TRUE);
-        keyTemplate.getUnwrap().setBooleanValue(Boolean.TRUE);
-        keyTemplate.getSign().setBooleanValue(Boolean.TRUE);
-        keyTemplate.getValue().setByteArrayValue(keyValueByteArray);
-        GenericSecretKey dkey = (GenericSecretKey) session.createObject(keyTemplate);
-        log.debug("derived key [can't read key value]");
-
-        return new HsmKey_SEED(hsmVendor, session, dkey);
+        return createKey(keyValue);
     }
 
     @Override
@@ -104,6 +92,29 @@ public class HsmKey_SEED implements HsmKey {
         log.debug("wrapped result [{}]", result);
 
         return result;
+    }
+
+    @Override
+    public HsmKey createKey(String value) throws TokenException {
+        log.debug("value to createKey: [{}]", value);
+        byte[] keyValueByteArray = Util.hexaString2ByteArray(value);
+
+        GenericSecretKey keyTemplate;
+        if (hsmVendor == HsmVendor.PTK) {
+            keyTemplate = new SEEDSecretKeyPTK();
+        } else {
+            throw new TokenException("Unsupported HSM vendor for SEED key creation: " + hsmVendor);
+        }
+
+        keyTemplate.getToken().setBooleanValue(Boolean.FALSE);
+        keyTemplate.getEncrypt().setBooleanValue(Boolean.TRUE);
+        keyTemplate.getDecrypt().setBooleanValue(Boolean.TRUE);
+        keyTemplate.getUnwrap().setBooleanValue(Boolean.TRUE);
+        keyTemplate.getSign().setBooleanValue(Boolean.TRUE);
+        keyTemplate.getValue().setByteArrayValue(keyValueByteArray);
+        GenericSecretKey dkey = (GenericSecretKey) session.createObject(keyTemplate);
+
+        return new HsmKey_SEED(hsmVendor, session, dkey);
     }
 
     Mechanism toMechanism(HsmMechanism hsmMechanism) {

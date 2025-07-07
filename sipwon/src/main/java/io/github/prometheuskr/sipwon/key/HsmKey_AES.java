@@ -9,8 +9,8 @@ import iaik.pkcs.pkcs11.parameters.InitializationVectorParameters;
 import iaik.pkcs.pkcs11.parameters.KeyDerivationStringDataParameters;
 import iaik.pkcs.pkcs11.parameters.Parameters;
 import io.github.prometheuskr.sipwon.constant.HsmMechanism;
-import io.github.prometheuskr.sipwon.constant.HsmVendorMechanism;
 import io.github.prometheuskr.sipwon.constant.HsmVendor;
+import io.github.prometheuskr.sipwon.constant.HsmVendorMechanism;
 import io.github.prometheuskr.sipwon.util.Util;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,8 +22,8 @@ public class HsmKey_AES implements HsmKey {
     private final Session session;
     private final Key key;
 
-    HsmKey_AES(HsmVendor hsmVendor2, Session session, Key key) {
-        this.hsmVendor = hsmVendor2;
+    HsmKey_AES(HsmVendor hsmVendor, Session session, Key key) {
+        this.hsmVendor = hsmVendor;
         this.session = session;
         this.key = key;
     }
@@ -104,6 +104,23 @@ public class HsmKey_AES implements HsmKey {
         log.debug("wrapped result [{}]", result);
 
         return result;
+    }
+
+    @Override
+    public HsmKey createKey(String value) throws TokenException {
+        log.debug("value to createKey: [{}]", value);
+        byte[] keyValueByteArray = Util.hexaString2ByteArray(value);
+
+        AESSecretKey keyTemplate = new AESSecretKey();
+        keyTemplate.getToken().setBooleanValue(Boolean.FALSE);
+        keyTemplate.getEncrypt().setBooleanValue(Boolean.TRUE);
+        keyTemplate.getDecrypt().setBooleanValue(Boolean.TRUE);
+        keyTemplate.getUnwrap().setBooleanValue(Boolean.TRUE);
+        keyTemplate.getSign().setBooleanValue(Boolean.TRUE);
+        keyTemplate.getValue().setByteArrayValue(keyValueByteArray);
+        AESSecretKey dkey = (AESSecretKey) session.createObject(keyTemplate);
+
+        return new HsmKey_AES(hsmVendor, session, dkey);
     }
 
     Mechanism toMechanism(HsmMechanism hsmMechanism) {

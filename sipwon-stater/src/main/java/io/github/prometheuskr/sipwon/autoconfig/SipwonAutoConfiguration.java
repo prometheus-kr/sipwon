@@ -21,11 +21,11 @@ public class SipwonAutoConfiguration {
     public HsmSessionFactory hsmSessionFactory(HsmProperties hsmProperties) {
         try {
             ModuleConfig moduleConfig = new ModuleConfig(hsmProperties.getPkcs11LibraryPath(),
-                    hsmProperties.getExcludedTokenPattern(),
-                    hsmProperties.getTarget().stream()
+                    hsmProperties.getTokenLabelAndPin().stream()
                             .collect(Collectors.toMap(
                                     HsmProperties.TokenPin::getTokenLabel,
-                                    HsmProperties.TokenPin::getPin)));
+                                    HsmProperties.TokenPin::getPin)),
+                    hsmProperties.getUseCacheKey());
             return new HsmSessionFactoryImpl(moduleConfig);
         } catch (TokenException | IOException e) {
             throw new RuntimeException("Failed to initialize HSM module configuration", e);

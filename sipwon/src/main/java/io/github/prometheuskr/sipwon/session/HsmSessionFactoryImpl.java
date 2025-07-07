@@ -19,6 +19,19 @@ public class HsmSessionFactoryImpl implements HsmSessionFactory {
 
     @Override
     public void checkHsm() {
-        hsmModuleConfig.checkHsm();
+        Thread thread = new Thread(() -> {
+            while (true) {
+                try {
+                    hsmModuleConfig.checkHsm();
+                    Thread.sleep(10_000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception ignore) {
+                }
+            }
+        }, "HsmHealthCheckLoopThread");
+        thread.setDaemon(true);
+        thread.start();
     }
 }

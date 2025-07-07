@@ -13,4 +13,6 @@ public interface HsmKey {
     HsmKey derive(String data) throws TokenException;
 
     String wrapKey(HsmKey targetKey) throws TokenException;
+
+    HsmKey createKey(String value) throws TokenException;
 }

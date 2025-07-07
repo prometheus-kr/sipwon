@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
 @ConfigurationProperties(prefix = "sipwon")
 public class HsmProperties {
     private String pkcs11LibraryPath;
-    private String excludedTokenPattern = "AdminToken.*";
-    private List<TokenPin> target = new ArrayList<>();
+    private List<TokenPin> tokenLabelAndPin = new ArrayList<>();
+    private Boolean useCacheKey = Boolean.FALSE;
 
     @Data
     @NoArgsConstructor

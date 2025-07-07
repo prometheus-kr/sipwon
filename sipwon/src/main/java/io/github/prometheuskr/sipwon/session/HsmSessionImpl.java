@@ -44,12 +44,17 @@ public class HsmSessionImpl implements HsmSession {
 
         key.getLabel().setCharArrayValue(keyLabel.toCharArray());
 
-        List<Key> keyList = findKeyHsm(session, key);
+        List<Key> keyList = findKeyHsm(key);
         if (keyList.size() != 1) {
             throw new RuntimeException("Key not found or multiple keys found for label: " + keyLabel);
         }
 
         return HsmKeyFactory.getHsmKey(hsmVendor, session, keyList.get(0));
+    }
+
+    @Override
+    public HsmKey createTempHsmKey(HsmKeyType keyType, String value) throws TokenException {
+        return HsmKeyFactory.createTempHsmKey(hsmVendor, session, keyType, value);
     }
 
     private Key newVendorKey(HsmKeyType keyType) {
@@ -75,7 +80,7 @@ public class HsmSessionImpl implements HsmSession {
         return null;
     }
 
-    private List<Key> findKeyHsm(Session session, Key template) throws TokenException {
+    private List<Key> findKeyHsm(Key template) throws TokenException {
         List<Key> keyList = new java.util.ArrayList<>();
         iaik.pkcs.pkcs11.objects.Object[] objs;
 
