@@ -2,8 +2,6 @@ package io.github.prometheuskr.sipwon.util;
 
 import java.util.Arrays;
 
-import iaik.pkcs.pkcs11.TokenException;
-import iaik.pkcs.pkcs11.wrapper.PKCS11Exception;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -18,7 +16,8 @@ public class Util {
         for (int i = 0; i < 256; i++) {
             HEX_TABLE[i] = String.format("%02X", i);
         }
-        log.debug("HEX_TABLE[{}] = {}", Arrays.toString(HEX_TABLE));
+        if (log.isDebugEnabled())
+            log.debug("HEX_TABLE[{}] = {}", Arrays.toString(HEX_TABLE));
 
         for (int i = 0; i < 256; i++) {
             int b = i & 0xFE;
@@ -26,22 +25,8 @@ public class Util {
             // 홀수 패리티가 아니면 LSB(최하위 비트)를 반전
             ODD_PARITY_TABLE[i] = (byte) ((ones % 2) == (i & 0x01) ? (i ^ 0x01) : i);
         }
-        log.debug("hex ODD_PARITY_TABLE[{}] = {}", byteArray2HexaString(ODD_PARITY_TABLE));
-    }
-
-    @FunctionalInterface
-    public interface AllowableErrorRunnable {
-        void run() throws TokenException;
-    }
-
-    public static void runAndIgnore(AllowableErrorRunnable runnable, long... allowedCodes) throws TokenException {
-        try {
-            runnable.run();
-        } catch (PKCS11Exception e) {
-            if (!Arrays.stream(allowedCodes).anyMatch(code -> e.getErrorCode() == code)) {
-                throw e;
-            }
-        }
+        if (log.isDebugEnabled())
+            log.debug("hex ODD_PARITY_TABLE[{}] = {}", byteArray2HexaString(ODD_PARITY_TABLE));
     }
 
     public static boolean isEmpty(String str) {
@@ -74,9 +59,11 @@ public class Util {
     }
 
     public static void sleep(int seconds) {
-        //@formatter:off
-        try {Thread.sleep(seconds * 1000L);} catch (InterruptedException ignore) {}
-        //@formatter:on
+        try {
+            Thread.sleep(seconds * 1000L);
+        } catch (InterruptedException ignore) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public static String toOddParityHexString(String hex) {

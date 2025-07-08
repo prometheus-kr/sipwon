@@ -20,12 +20,12 @@ public class HsmKey_TDES implements HsmKey {
 
     private final HsmVendor hsmVendor;
     private final Session session;
-    private final Key key;
+    private final DES3SecretKey key;
 
     HsmKey_TDES(HsmVendor hsmVendor, Session session, Key key) {
         this.hsmVendor = hsmVendor;
         this.session = session;
-        this.key = key;
+        this.key = (DES3SecretKey) key;
     }
 
     @Override

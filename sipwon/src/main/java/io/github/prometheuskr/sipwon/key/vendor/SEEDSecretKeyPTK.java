@@ -11,11 +11,12 @@ import iaik.pkcs.pkcs11.wrapper.PKCS11Exception;
 import io.github.prometheuskr.sipwon.constant.HsmVendorKeyType;
 
 public class SEEDSecretKeyPTK extends GenericSecretKey {
+    
     private final VendorDefinedKeyBuilder builder = (s, h) -> {
         try {
             return SEEDSecretKeyPTK.getInstance(s, h);
         } catch (TokenException e) {
-            throw new PKCS11Exception(0x88888888l);
+            throw new PKCS11Exception(0x88000002l);
         }
     };
 

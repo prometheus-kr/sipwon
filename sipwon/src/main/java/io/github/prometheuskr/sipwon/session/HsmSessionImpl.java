@@ -1,7 +1,6 @@
 package io.github.prometheuskr.sipwon.session;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import iaik.pkcs.pkcs11.Session;
 import iaik.pkcs.pkcs11.TokenException;
@@ -14,6 +13,7 @@ import io.github.prometheuskr.sipwon.constant.HsmKeyType;
 import io.github.prometheuskr.sipwon.constant.HsmVendor;
 import io.github.prometheuskr.sipwon.key.HsmKey;
 import io.github.prometheuskr.sipwon.key.HsmKeyFactory;
+import io.github.prometheuskr.sipwon.key.vendor.SEEDSecretKey;
 import io.github.prometheuskr.sipwon.key.vendor.SEEDSecretKeyPTK;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +44,7 @@ public class HsmSessionImpl implements HsmSession {
 
         key.getLabel().setCharArrayValue(keyLabel.toCharArray());
 
-        List<Key> keyList = findKeyHsm(key);
+        List<Key> keyList = ModuleHelper.findKey(session, key);
         if (keyList.size() != 1) {
             throw new RuntimeException("Key not found or multiple keys found for label: " + keyLabel);
         }
@@ -73,26 +73,10 @@ public class HsmSessionImpl implements HsmSession {
                     case DDES -> new DES2SecretKey();
                     case TDES -> new DES3SecretKey();
                     case AES -> new AESSecretKey();
-                    case SEED -> new SEEDSecretKeyPTK();
+                    case SEED -> new SEEDSecretKey();
                 };
         }
 
         return null;
-    }
-
-    private List<Key> findKeyHsm(Key template) throws TokenException {
-        List<Key> keyList = new java.util.ArrayList<>();
-        iaik.pkcs.pkcs11.objects.Object[] objs;
-
-        session.findObjectsInit(template);
-
-        do {
-            objs = session.findObjects(10);
-            Stream.of(objs).forEach(obj -> keyList.add((Key) obj));
-        } while (objs.length == 10);
-
-        session.findObjectsFinal();
-
-        return keyList;
     }
 }

@@ -20,12 +20,12 @@ public class HsmKey_SEED implements HsmKey {
 
     private final HsmVendor hsmVendor;
     private final Session session;
-    private final Key key;
+    private final GenericSecretKey key;
 
     HsmKey_SEED(HsmVendor hsmVendor, Session session, Key key) {
         this.hsmVendor = hsmVendor;
         this.session = session;
-        this.key = key;
+        this.key = (GenericSecretKey)key;
     }
 
     @Override

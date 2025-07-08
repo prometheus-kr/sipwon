@@ -20,12 +20,12 @@ public class HsmKey_AES implements HsmKey {
 
     private final HsmVendor hsmVendor;
     private final Session session;
-    private final Key key;
+    private final AESSecretKey key;
 
     HsmKey_AES(HsmVendor hsmVendor, Session session, Key key) {
         this.hsmVendor = hsmVendor;
         this.session = session;
-        this.key = key;
+        this.key = (AESSecretKey)key;
     }
 
     @Override

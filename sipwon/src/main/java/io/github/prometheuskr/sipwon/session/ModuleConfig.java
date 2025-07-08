@@ -2,13 +2,17 @@ package io.github.prometheuskr.sipwon.session;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import iaik.pkcs.pkcs11.Module;
 import iaik.pkcs.pkcs11.Session;
+import iaik.pkcs.pkcs11.Slot;
+import iaik.pkcs.pkcs11.SlotInfo;
 import iaik.pkcs.pkcs11.Token;
 import iaik.pkcs.pkcs11.TokenException;
 import iaik.pkcs.pkcs11.TokenInfo;
@@ -20,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ModuleConfig {
-    private static final String NEW_LINE = System.lineSeparator();
 
     private final Module module;
     private final HsmVendor hsmVendor;
@@ -48,121 +51,140 @@ public class ModuleConfig {
 
     public ModuleConfig(String pkcs11LibraryPath, Map<String, String> pinByTokenLabel, boolean useCacheKey)
             throws TokenException, IOException {
-        if (pkcs11LibraryPath.contains("cryptoki")) {
-            hsmVendor = HsmVendor.PTK;
-        } else if (pkcs11LibraryPath.contains("cknfast")) {
-            hsmVendor = HsmVendor.NFAST;
-        } else {
-            throw new RuntimeException("Unsupported PKCS#11 library path: " + pkcs11LibraryPath);
-        }
-
-        this.module = Module.getInstance(pkcs11LibraryPath);
-        ModuleHelper.initializeHsm(module);
-        this.pinByTokenLabel = pinByTokenLabel;
         this.useCacheKey = useCacheKey;
+        this.pinByTokenLabel = pinByTokenLabel;
+        this.hsmVendor = ModuleHelper.getHsmVendor(pkcs11LibraryPath);
+        this.module = ModuleHelper.buildModule(pkcs11LibraryPath);
         buildCache();
     }
 
-    public HsmVendor getHsmVendor() {
+    HsmVendor getHsmVendor() {
         return hsmVendor;
+    }
+
+    Session getHsmSession(String tokenLabel, String pin) throws TokenException {
+        List<TokenAndInfo> tokenAndInfoList = tokenAndInfoListByTokenLabel.get(tokenLabel);
+        if (tokenAndInfoList == null || tokenAndInfoList.isEmpty()) {
+            throw new IllegalArgumentException("No token found for label: " + tokenLabel);
+        }
+
+        int index = loadBalancing(tokenLabel);
+        return openSessionHsm(tokenAndInfoList.get(index), pin);
+    }
+
+    private int loadBalancing(String tokenLabel) {
+        int size = tokenAndInfoListByTokenLabel.get(tokenLabel).size();
+        AtomicInteger aInt = listIndexByTokenLabel.computeIfAbsent(tokenLabel, k -> new AtomicInteger(0));
+        return Math.abs(aInt.getAndIncrement() % size);
+    }
+
+    private Session openSessionHsm(TokenAndInfo tokenAndInfo, String pin) throws TokenException {
+        return ModuleHelper.openSession(
+                tokenAndInfo.getToken(),
+                pin == null ? pinByTokenLabel.get(tokenAndInfo.getTokenLabel()) : pin);
     }
 
     void checkHsm() {
         new Thread(this::doHealthCheck, "HsmHealthCheckSignalThread").start();
     }
 
-    Session getHsmSession(String tokenLabel, String pin) throws TokenException {
-        List<TokenAndInfo> tokenAndInfos = tokenAndInfoListByTokenLabel.get(tokenLabel);
-        if (tokenAndInfos == null || tokenAndInfos.isEmpty()) {
-            throw new IllegalArgumentException("No token found for label: " + tokenLabel);
-        }
-
-        int size = tokenAndInfos.size();
-        AtomicInteger aInt = listIndexByTokenLabel.computeIfAbsent(tokenLabel, k -> new AtomicInteger(0));
-        int index = Math.abs(aInt.getAndIncrement() % size);
-        return openSessionHsm(tokenAndInfos.get(index), pin);
-    }
-
     private void doHealthCheck() {
-        synchronized (this) {
-            try {
-                ModuleHelper.initializeHsm(module);
-                buildCache();
-
-                // openSessionHsm(tokenAndInfoListByTokenLabel.values().stream().findFirst().get());
-            } catch (TokenException e) {
-                ModuleHelper.finalizeHsm(module, e);
-                clear();
-                Util.sleep(1000);
-                checkHsm();
-            } catch (Exception e) {
-                ModuleHelper.finalizeHsm(module, e);
-                clear();
-                throw e;
+        final int maxBackoff = 60_000;
+        while (true) {
+            int backoff = 10_000;
+            Util.sleep(backoff);
+            
+            synchronized (this) {
+                try {
+                    ModuleHelper.initialize(module);
+                    buildCache();
+                    String tokenLabel = pinByTokenLabel.keySet().stream()
+                            .findFirst()
+                            .orElseThrow(() -> new RuntimeException("No token label found"));
+                    Session session = getHsmSession(tokenLabel, null);
+                    ModuleHelper.closeSession(session);
+                    backoff = 10_000;
+                } catch (Exception e) {
+                    log.error("HSM Health Check failed: {}", e.getMessage(), e);
+                    ModuleHelper.finalize(module);
+                    clearCache();
+                    backoff = Math.min(backoff + 10_000, maxBackoff);
+                }
             }
         }
     }
 
-    private void clear() {
+    private void clearCache() {
         tokenAndInfoListByTokenLabel.clear();
         tokenAndKeyListByKeyClassNameAndKeyLabel.clear();
     }
 
     private void buildCache() throws TokenException {
-        if (tokenAndInfoListByTokenLabel.isEmpty()) {
-            ModuleHelper.logModuleInfo(module, NEW_LINE);
-            ModuleHelper.forEachSlot(module, slot -> ModuleHelper.logSlotInfo(slot, NEW_LINE, t -> {
-                try {
-                    ModuleHelper.addTokenIfPresent(t, pinByTokenLabel, tokenAndInfoListByTokenLabel);
-                } catch (TokenException e) {
-                    log.warn("Failed to add token: {}", e.getMessage(), e);
-                }
-            }));
-            log.info("tokenAndInfoListByTokenLabel: {}", tokenAndInfoListByTokenLabel);
-            checkKeyInfo();
+        if (!tokenAndInfoListByTokenLabel.isEmpty())
+            return;
+
+        cacheToken();
+        cacheKey();
+    }
+
+    private void cacheToken() throws TokenException {
+        ModuleHelper.getSlotList(module).forEach(this::checkTokenAndInfo);
+        log.info("tokenAndInfoListByTokenLabel: {}", tokenAndInfoListByTokenLabel);
+    }
+
+    private void checkTokenAndInfo(Slot slot) {
+        log.info("Slot: {}", slot);
+
+        try {
+            SlotInfo slotInfo = slot.getSlotInfo();
+            log.info("SlotInfo: {}", slotInfo);
+
+            Token token = slot.getToken();
+            if (token != null) {
+                TokenInfo tokenInfo = token.getTokenInfo();
+                log.info("TokenInfo: {}", tokenInfo);
+
+                String tokenLabel = tokenInfo.getLabel().trim();
+                if (pinByTokenLabel.containsKey(tokenLabel))
+                    tokenAndInfoListByTokenLabel
+                            .computeIfAbsent(tokenLabel, k -> new CopyOnWriteArrayList<>())
+                            .add(new TokenAndInfo(token, tokenInfo));
+            }
+        } catch (Exception ignore) {
+            log.warn("Failed to get slot info: {}", ignore.getMessage(), ignore);
         }
     }
 
-    private void checkKeyInfo() throws TokenException {
+    private void cacheKey() throws TokenException {
         if (!useCacheKey)
             return;
 
-        for (List<TokenAndInfo> tokenAndInfoList : tokenAndInfoListByTokenLabel.values()) {
-            for (TokenAndInfo tokenAndInfo : tokenAndInfoList) {
-                try {
-                    findAllKeysInToken(tokenAndInfo);
-                } catch (Exception e) {
-                    String tokenLabel = tokenAndInfo.getTokenLabel();
-                    log.warn("Token(label={}) session/object scan failed", tokenLabel, e);
-                }
-            }
-        }
+        tokenAndInfoListByTokenLabel.values().forEach(this::iterateTokenAndInfoList);
+
         log.info("tokenAndKeyListByKeyClassNameAndKeyLabel: {}", tokenAndKeyListByKeyClassNameAndKeyLabel);
     }
 
-    private void findAllKeysInToken(TokenAndInfo tokenAndInfo) throws TokenException {
+    private void iterateTokenAndInfoList(List<TokenAndInfo> list) {
+        list.forEach(this::findAllKeysInToken);
+    }
+
+    private void findAllKeysInToken(TokenAndInfo tokenAndInfo) {
         Token token = tokenAndInfo.getToken();
         Session session = null;
         try {
-            session = openSessionHsm(tokenAndInfo);
-            List<Key> allObjects = ModuleHelper.findKeyHsm(session);
-            allObjects.forEach(key -> tokenAndKeyListByKeyClassNameAndKeyLabel
-                    .computeIfAbsent(key.getClass().getSimpleName(), k -> new java.util.HashMap<>())
-                    .computeIfAbsent(key.getLabel().toString(), k -> new TokenAndKeyList(token))
-                    .getKeyList()
-                    .add(key));
+            session = openSessionHsm(tokenAndInfo, null);
+            List<Key> allObjects = ModuleHelper.findKey(session, new Key());
+            allObjects.stream()
+                    .filter(key -> key.getLabel() != null && !key.getLabel().toString().isEmpty())
+                    .forEach(key -> tokenAndKeyListByKeyClassNameAndKeyLabel
+                            .computeIfAbsent(key.getClass().getSimpleName(), k -> new HashMap<>())
+                            .computeIfAbsent(key.getLabel().toString(), k -> new TokenAndKeyList(token))
+                            .getKeyList()
+                            .add(key));
+        } catch (TokenException ignore) {
+            log.warn("Token(label={}) session/object scan failed", tokenAndInfo.getTokenLabel(), ignore);
         } finally {
-            ModuleHelper.closeSessionHsm(session);
+            ModuleHelper.closeSession(session);
         }
-    }
-
-    private Session openSessionHsm(TokenAndInfo tokenAndInfo) throws TokenException {
-        return openSessionHsm(tokenAndInfo, null);
-    }
-
-    private Session openSessionHsm(TokenAndInfo tokenAndInfo, String pin) throws TokenException {
-        return ModuleHelper.openSessionHsm(
-                tokenAndInfo.getToken(),
-                pin == null ? pinByTokenLabel.get(tokenAndInfo.getTokenLabel()) : pin);
     }
 }

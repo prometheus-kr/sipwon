@@ -84,7 +84,7 @@ class ModuleTest {
         session.login(true, "1111".toCharArray());
 
         // label로 key 찾기
-        String keyLabel = "0238CPBK01FF";
+        String keyLabel = "CPBK01FF";
         iaik.pkcs.pkcs11.objects.Key template = new iaik.pkcs.pkcs11.objects.Key();
         session.findObjectsInit(template);
         iaik.pkcs.pkcs11.objects.Key foundKey = null;

@@ -16,19 +16,19 @@ public class SEEDSecretKey extends GenericSecretKey {
         try {
             return SEEDSecretKey.getInstance(s, h);
         } catch (TokenException e) {
-            throw new PKCS11Exception(0x88888888l);
+            throw new PKCS11Exception(0x88000001l);
         }
     };
 
     protected ByteArrayAttribute value_;
 
-    SEEDSecretKey() {
+    public SEEDSecretKey() {
         super();
         keyType_.setLongValue(HsmVendorKeyType.SEED.getKeyType());
         vendorKeyBuilder_ = builder;
     }
 
-    SEEDSecretKey(final Session session, final long objectHandle) throws TokenException {
+    protected SEEDSecretKey(final Session session, final long objectHandle) throws TokenException {
         super(session, objectHandle);
         keyType_.setLongValue(HsmVendorKeyType.SEED.getKeyType());
         vendorKeyBuilder_ = builder;
