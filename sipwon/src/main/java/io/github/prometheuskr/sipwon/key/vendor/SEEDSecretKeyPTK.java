@@ -144,8 +144,6 @@ public class SEEDSecretKeyPTK extends GenericSecretKey {
      * are registered in the new object's attribute table.
      * 
      * @return a deep copy of this {@code SEEDSecretKeyPTK} instance
-     * @throws CloneNotSupportedException
-     *             if the object's class does not support the {@code Cloneable} interface
      */
     @Override
     public java.lang.Object clone() {

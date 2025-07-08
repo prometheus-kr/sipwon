@@ -165,7 +165,7 @@ public enum HsmVendorMechanism {
     /**
      * Retrieves the default {@link Mechanism} associated with this vendor mechanism.
      * <p>
-     * This method is a convenience overload that calls {@link #getMechanism(Object)}
+     * This method is a convenience overload that calls {@link #getMechanism(Parameters)}
      * with a {@code null} parameter, returning the default mechanism.
      *
      * @return the default {@code Mechanism} for this vendor mechanism

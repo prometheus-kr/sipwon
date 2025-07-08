@@ -14,9 +14,38 @@ import io.github.prometheuskr.sipwon.constant.HsmVendorMechanism;
 import io.github.prometheuskr.sipwon.util.Util;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Implementation of the {@link HsmKey} interface for Triple DES (TDES/3DES) cryptographic operations
+ * using a Hardware Security Module (HSM).
+ * <p>
+ * This class encapsulates a TDES secret key and provides methods for encryption, decryption,
+ * message authentication code (MAC) generation, key derivation, key wrapping, and key creation,
+ * all performed within the secure environment of an HSM. It supports various HSM mechanisms and
+ * vendor-specific configurations.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Encrypts and decrypts data using TDES and specified HSM mechanisms.</li>
+ * <li>Generates MACs for data integrity and authentication.</li>
+ * <li>Derives new TDES keys from existing keys and input data.</li>
+ * <li>Wraps and unwraps keys securely for transport or storage.</li>
+ * <li>Creates new TDES keys in the HSM from provided values.</li>
+ * <li>Handles mechanism parameterization based on HSM vendor and operation type.</li>
+ * </ul>
+ * <p>
+ * This class is intended for use in environments where cryptographic key material must remain
+ * protected within an HSM, and where operations must comply with security and compliance requirements.
+ *
+ * @author PrometheusKR
+ */
 @Slf4j
 public class HsmKey_TDES implements HsmKey {
-    private static final String DES_INITIAL_VECTOR = "0".repeat(16);
+    /**
+     * The initial vector (IV) used for cryptographic operations, represented as a 16-character string of zeros.
+     * This is typically used in block cipher modes that require an IV, such as CBC mode.
+     * The value "0000000000000000" ensures a predictable and consistent IV for encryption and decryption processes.
+     */
+    private static final String INITIAL_VECTOR = "0".repeat(16);
 
     /**
      * The HSM (Hardware Security Module) vendor associated with this key.
@@ -240,7 +269,7 @@ public class HsmKey_TDES implements HsmKey {
      * @return the corresponding {@link Mechanism} instance
      */
     private Mechanism toMechanism(HsmMechanism hsmMechanism) {
-        return toMechanism(hsmMechanism, DES_INITIAL_VECTOR);
+        return toMechanism(hsmMechanism, INITIAL_VECTOR);
     }
 
     /**

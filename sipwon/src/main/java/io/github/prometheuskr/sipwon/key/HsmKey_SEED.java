@@ -14,9 +14,50 @@ import io.github.prometheuskr.sipwon.constant.HsmVendor;
 import io.github.prometheuskr.sipwon.util.Util;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Implementation of the {@link HsmKey} interface for SEED cryptographic operations using a Hardware Security Module
+ * (HSM).
+ * <p>
+ * This class provides methods for encryption, decryption, MAC generation, key derivation, and key wrapping
+ * using the SEED algorithm. It supports vendor-specific mechanisms and manages cryptographic keys within a secure HSM
+ * session.
+ * <p>
+ * <b>Features:</b>
+ * <ul>
+ * <li>Encrypts and decrypts data using SEED mechanisms supported by the configured HSM vendor.</li>
+ * <li>Generates Message Authentication Codes (MAC) for data integrity and authentication.</li>
+ * <li>Derives new HSM keys from input data using SEED encryption.</li>
+ * <li>Wraps and unwraps keys for secure key management and transport.</li>
+ * <li>Supports vendor-specific key creation and mechanism mapping.</li>
+ * </ul>
+ * <p>
+ * <b>Usage:</b>
+ * 
+ * <pre>
+ * HsmKey_SEED seedKey = new HsmKey_SEED(hsmVendor, session, key);
+ * String encrypted = seedKey.encrypt(data, HsmMechanism.SEED_ECB);
+ * String decrypted = seedKey.decrypt(encrypted, HsmMechanism.SEED_ECB);
+ * String mac = seedKey.mac(data, HsmMechanism.SEED_CBC_PTK);
+ * HsmKey derivedKey = seedKey.derive(data);
+ * String wrappedKey = seedKey.wrapKey(anotherSeedKey);
+ * </pre>
+ * <p>
+ * <b>Note:</b> Currently, only the PTK vendor is supported for SEED key creation.
+ * <p>
+ * All data inputs and outputs are expected to be hexadecimal-encoded strings.
+ *
+ * @see HsmKey
+ * @see HsmVendor
+ * @see Session
+ * @see GenericSecretKey
+ */
 @Slf4j
 public class HsmKey_SEED implements HsmKey {
-    private static final String SEED_INITIAL_VECTOR = "0".repeat(32);
+    /**
+     * The initial vector (IV) used for cryptographic operations, represented as a 32-character string of zeros.
+     * This value is typically used to provide an initial state for encryption algorithms that require an IV.
+     */
+    private static final String INITIAL_VECTOR = "0".repeat(32);
 
     /**
      * The HSM (Hardware Security Module) vendor associated with this key.
@@ -233,7 +274,7 @@ public class HsmKey_SEED implements HsmKey {
      * @return a {@link Mechanism} instance configured with the given HSM mechanism and the default SEED initial vector
      */
     private Mechanism toMechanism(HsmMechanism hsmMechanism) {
-        return toMechanism(hsmMechanism, SEED_INITIAL_VECTOR);
+        return toMechanism(hsmMechanism, INITIAL_VECTOR);
     }
 
     /**

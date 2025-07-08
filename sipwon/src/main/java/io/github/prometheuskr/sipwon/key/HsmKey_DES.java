@@ -14,9 +14,39 @@ import io.github.prometheuskr.sipwon.constant.HsmVendorMechanism;
 import io.github.prometheuskr.sipwon.util.Util;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Implementation of the {@link HsmKey} interface for DES (Data Encryption Standard) keys managed by a Hardware Security
+ * Module (HSM).
+ * <p>
+ * This class provides cryptographic operations such as encryption, decryption, MAC generation, key derivation, key
+ * wrapping,
+ * and key creation using DES keys within an HSM session. It abstracts the underlying HSM vendor and session details,
+ * allowing secure key management and cryptographic processing.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Encrypts and decrypts data using DES mechanisms supported by the HSM.</li>
+ * <li>Generates Message Authentication Codes (MAC) for data integrity and authentication.</li>
+ * <li>Derives new DES keys from existing keys using HSM-supported derivation mechanisms.</li>
+ * <li>Wraps and unwraps DES keys for secure key transport or storage.</li>
+ * <li>Creates new DES keys in the HSM from provided key values.</li>
+ * <li>Handles mechanism parameterization (e.g., initialization vectors, derivation data) based on the operation.</li>
+ * </ul>
+ * <p>
+ * All cryptographic operations are performed within the secure environment of the HSM, leveraging the vendor-specific
+ * implementation and session management.
+ * <p>
+ * <b>Note:</b> This class is intended for internal use within the cryptographic framework and should not expose
+ * sensitive key material.
+ */
 @Slf4j
 public class HsmKey_DES implements HsmKey {
-    private static final String DES_INITIAL_VECTOR = "0".repeat(16);
+    /**
+     * The initial vector (IV) used for DES encryption in CBC mode.
+     * This IV is a 16-character string consisting of zeros, which is commonly used as a default value.
+     * Note: For security reasons, consider using a random IV in production environments.
+     */
+    private static final String INITIAL_VECTOR = "0".repeat(16);
 
     /**
      * The HSM (Hardware Security Module) vendor associated with this key.
@@ -238,7 +268,7 @@ public class HsmKey_DES implements HsmKey {
      * @return the corresponding {@link Mechanism} instance
      */
     private Mechanism toMechanism(HsmMechanism hsmMechanism) {
-        return toMechanism(hsmMechanism, DES_INITIAL_VECTOR);
+        return toMechanism(hsmMechanism, INITIAL_VECTOR);
     }
 
     /**

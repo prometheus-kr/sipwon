@@ -124,8 +124,6 @@ public class Util {
      * @return a byte array representing the hexadecimal string
      * @throws NumberFormatException
      *             if the string contains invalid hexadecimal characters
-     * @throws StringIndexOutOfBoundsException
-     *             if the string length is not even
      */
     public static byte[] hexaString2ByteArray(final String hex) {
         byte[] result = new byte[hex.length() / 2];

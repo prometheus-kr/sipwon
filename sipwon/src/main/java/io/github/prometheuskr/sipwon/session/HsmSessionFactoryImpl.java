@@ -1,7 +1,6 @@
 package io.github.prometheuskr.sipwon.session;
 
 import iaik.pkcs.pkcs11.TokenException;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Implementation of the {@link HsmSessionFactory} interface that provides methods to create and manage HSM sessions.
@@ -14,13 +13,22 @@ import lombok.RequiredArgsConstructor;
  * <li>Delegate HSM health checks to the configured module.</li>
  * </ul>
  */
-@RequiredArgsConstructor
 public class HsmSessionFactoryImpl implements HsmSessionFactory {
     /**
      * Configuration object for the HSM (Hardware Security Module) module.
      * Holds settings and parameters required to initialize and manage HSM sessions.
      */
     private final ModuleConfig hsmModuleConfig;
+
+    /**
+     * Constructs a new {@code HsmSessionFactoryImpl} with the specified HSM module configuration.
+     *
+     * @param hsmModuleConfig
+     *            the configuration object for the HSM module
+     */
+    public HsmSessionFactoryImpl(ModuleConfig hsmModuleConfig) {
+        this.hsmModuleConfig = hsmModuleConfig;
+    }
 
     /**
      * Retrieves an {@link HsmSession} associated with the specified token label.
@@ -56,9 +64,6 @@ public class HsmSessionFactoryImpl implements HsmSessionFactory {
      * Checks the status or availability of the HSM (Hardware Security Module) by delegating
      * the operation to the configured {@code hsmModuleConfig}. This method ensures that the
      * HSM is properly initialized and ready for cryptographic operations.
-     *
-     * @throws HsmException
-     *             if the HSM is not available or fails the check.
      */
     @Override
     public void checkHsm() {

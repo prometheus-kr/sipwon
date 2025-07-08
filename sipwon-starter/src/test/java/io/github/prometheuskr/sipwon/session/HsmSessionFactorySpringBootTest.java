@@ -15,8 +15,7 @@ class HsmSessionFactorySpringBootTest {
     HsmSessionFactory hsmSessionFactory;
 
     @Test
-    void contextLoads() {
-    }
+    void contextLoads() {}
 
     @Test
     void getHsmSession_and_getHsmKey() throws Exception {
