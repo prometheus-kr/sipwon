@@ -16,18 +16,56 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HsmKey_SEED implements HsmKey {
-    private static final String SEED_INITIAL_VECTOR = "00000000000000000000000000000000";
+    private static final String SEED_INITIAL_VECTOR = "0".repeat(32);
 
+    /**
+     * The HSM (Hardware Security Module) vendor associated with this key.
+     * This field specifies which HSM implementation is being used for cryptographic operations.
+     */
     private final HsmVendor hsmVendor;
+    /**
+     * The {@code session} represents an active connection to the HSM (Hardware Security Module).
+     * It is used to perform cryptographic operations and manage keys within the secure environment.
+     * This session is typically established and managed by the underlying cryptographic provider.
+     */
     private final Session session;
+    /**
+     * The cryptographic secret key used for HSM (Hardware Security Module) operations.
+     * This key is represented by a {@link GenericSecretKey} instance and is immutable.
+     */
     private final GenericSecretKey key;
 
+    /**
+     * Constructs a new {@code HsmKey_SEED} instance with the specified HSM vendor, session, and key.
+     *
+     * @param hsmVendor
+     *            the HSM vendor implementation to be used
+     * @param session
+     *            the session associated with the HSM
+     * @param key
+     *            the cryptographic key, expected to be of type {@code GenericSecretKey}
+     */
     HsmKey_SEED(HsmVendor hsmVendor, Session session, Key key) {
         this.hsmVendor = hsmVendor;
         this.session = session;
-        this.key = (GenericSecretKey)key;
+        this.key = (GenericSecretKey) key;
     }
 
+    /**
+     * Encrypts the provided data using the specified HSM mechanism.
+     * <p>
+     * This method initializes the encryption operation with the given mechanism and key,
+     * converts the input hexadecimal string to a byte array, performs the encryption using
+     * the HSM session, and returns the encrypted result as a hexadecimal string.
+     *
+     * @param data
+     *            the data to encrypt, represented as a hexadecimal string
+     * @param hsmMechanism
+     *            the HSM mechanism to use for encryption
+     * @return the encrypted data as a hexadecimal string
+     * @throws TokenException
+     *             if an error occurs during encryption
+     */
     @Override
     public String encrypt(String data, HsmMechanism hsmMechanism) throws TokenException {
         log.debug("data to encrypt: [{}]", data);
@@ -43,6 +81,21 @@ public class HsmKey_SEED implements HsmKey {
         return result;
     }
 
+    /**
+     * Decrypts the given hexadecimal-encoded data using the specified HSM mechanism.
+     * <p>
+     * This method initializes the decryption operation with the provided mechanism and key,
+     * converts the input hexadecimal string to a byte array, performs the decryption using the HSM session,
+     * and returns the decrypted result as a hexadecimal string.
+     *
+     * @param data
+     *            the hexadecimal-encoded string to decrypt
+     * @param hsmMechanism
+     *            the HSM mechanism to use for decryption
+     * @return the decrypted data as a hexadecimal-encoded string
+     * @throws TokenException
+     *             if an error occurs during decryption
+     */
     @Override
     public String decrypt(String data, HsmMechanism hsmMechanism) throws TokenException {
         log.debug("data to decrypt: [{}]", data);
@@ -58,6 +111,21 @@ public class HsmKey_SEED implements HsmKey {
         return result;
     }
 
+    /**
+     * Generates a Message Authentication Code (MAC) for the given data using the specified HSM mechanism.
+     * <p>
+     * This method initializes the signing operation with the provided mechanism and key,
+     * converts the input hexadecimal string to a byte array, and computes the MAC.
+     * The resulting MAC is converted back to a hexadecimal string and truncated to the first 8 characters.
+     *
+     * @param data
+     *            the hexadecimal string representation of the data to be signed
+     * @param hsmMechanism
+     *            the HSM mechanism to use for signing
+     * @return the first 8 characters of the hexadecimal MAC string
+     * @throws TokenException
+     *             if an error occurs during the signing process
+     */
     @Override
     public String mac(String data, HsmMechanism hsmMechanism) throws TokenException {
         log.debug("data to sign: [{}]", data);
@@ -73,6 +141,18 @@ public class HsmKey_SEED implements HsmKey {
         return result;
     }
 
+    /**
+     * Derives a new {@link HsmKey} from the provided data string.
+     * <p>
+     * This method encrypts the input data using the SEED ECB mechanism and creates a new HsmKey
+     * instance from the resulting encrypted value.
+     * 
+     * @param data
+     *            the input data to derive the key from
+     * @return a new {@link HsmKey} derived from the input data
+     * @throws TokenException
+     *             if an error occurs during key derivation or encryption
+     */
     @Override
     public HsmKey derive(String data) throws TokenException {
         log.debug("data to derive: [{}]", data);
@@ -81,6 +161,18 @@ public class HsmKey_SEED implements HsmKey {
         return createKey(keyValue);
     }
 
+    /**
+     * Wraps the specified target key using the SEED ECB mechanism.
+     * <p>
+     * This method wraps the provided {@code targetKey} with the current key instance,
+     * using the SEED ECB encryption mechanism. The wrapped key is returned as a hexadecimal string.
+     * 
+     * @param targetKey
+     *            the {@link HsmKey} to be wrapped; must be an instance of {@link HsmKey_SEED}
+     * @return the wrapped key as a hexadecimal string
+     * @throws TokenException
+     *             if an error occurs during the key wrapping process
+     */
     @Override
     public String wrapKey(HsmKey targetKey) throws TokenException {
         log.debug("targetKey to wrap: [can't read key value]");
@@ -94,6 +186,21 @@ public class HsmKey_SEED implements HsmKey {
         return result;
     }
 
+    /**
+     * Creates a new SEED HSM key using the provided hexadecimal string value.
+     * <p>
+     * This method converts the input hexadecimal string to a byte array and initializes
+     * a key template specific to the configured HSM vendor. Currently, only the PTK vendor
+     * is supported for SEED key creation. The method sets the appropriate attributes for
+     * the key (encryption, decryption, unwrapping, signing) and creates the key object
+     * within the HSM session.
+     * 
+     * @param value
+     *            the hexadecimal string representation of the key value
+     * @return a new {@link HsmKey_SEED} instance representing the created key
+     * @throws TokenException
+     *             if the HSM vendor is unsupported or key creation fails
+     */
     @Override
     public HsmKey createKey(String value) throws TokenException {
         log.debug("value to createKey: [{}]", value);
@@ -117,11 +224,33 @@ public class HsmKey_SEED implements HsmKey {
         return new HsmKey_SEED(hsmVendor, session, dkey);
     }
 
-    Mechanism toMechanism(HsmMechanism hsmMechanism) {
+    /**
+     * Converts the specified {@link HsmMechanism} to a {@link Mechanism} using the default
+     * SEED initial vector.
+     *
+     * @param hsmMechanism
+     *            the HSM mechanism to convert
+     * @return a {@link Mechanism} instance configured with the given HSM mechanism and the default SEED initial vector
+     */
+    private Mechanism toMechanism(HsmMechanism hsmMechanism) {
         return toMechanism(hsmMechanism, SEED_INITIAL_VECTOR);
     }
 
-    Mechanism toMechanism(HsmMechanism hsmMechanism, String data) {
+    /**
+     * Converts the specified {@link HsmMechanism} and associated data into a {@link Mechanism} object.
+     * <p>
+     * This method determines the appropriate vendor-specific mechanism using the provided
+     * {@code hsmVendor}, and constructs the required parameters based on the mechanism type.
+     * For {@code SEED_CBC_PTK}, it creates an {@link InitializationVectorParameters} using
+     * the hexadecimal string {@code data}. For other mechanisms, no parameters are provided.
+     *
+     * @param hsmMechanism
+     *            the high-level HSM mechanism to convert
+     * @param data
+     *            the hexadecimal string data used for parameter construction (e.g., IV)
+     * @return the constructed {@link Mechanism} object with appropriate parameters
+     */
+    private Mechanism toMechanism(HsmMechanism hsmMechanism, String data) {
         HsmVendorMechanism changedMechanism = hsmMechanism.getMechanism0(hsmVendor);
 
         Parameters param = switch (changedMechanism) {

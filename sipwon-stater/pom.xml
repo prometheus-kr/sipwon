@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.5</version>
+        <version>3.5.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -14,8 +14,50 @@
     <artifactId>sipwon-spring-boot-starter</artifactId>
     <version>0.0.1</version>
     <packaging>jar</packaging>
+    
     <name>sipwon-spring-boot-starter</name>
     <description>Spring Boot Starter for SIPWON</description>
+    <url>https://github.com/prometheus-kr/sipwon</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>prometheus-kr</id>
+            <name>Prometheus</name>
+            <email>prometheus@kakao.com</email>
+            <url>https://github.com/prometheus-kr</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/prometheus-kr/sipwon.git</connection>
+        <developerConnection>scm:git:ssh://github.com:prometheus-kr/sipwon.git</developerConnection>
+        <url>https://github.com/prometheus-kr/sipwon</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+    </properties>
 
     <dependencies>
         <dependency>

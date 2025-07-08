@@ -16,18 +16,56 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HsmKey_TDES implements HsmKey {
-    private static final String DES_INITIAL_VECTOR = "0000000000000000";
+    private static final String DES_INITIAL_VECTOR = "0".repeat(16);
 
+    /**
+     * The HSM (Hardware Security Module) vendor associated with this key.
+     * This field specifies which HSM implementation is being used for cryptographic operations.
+     */
     private final HsmVendor hsmVendor;
+    /**
+     * The {@code session} represents an active connection to the HSM (Hardware Security Module).
+     * It is used to perform cryptographic operations and manage keys within the secure environment.
+     * This session is typically established and managed by the underlying cryptographic provider.
+     */
     private final Session session;
+    /**
+     * The Triple DES (3DES) secret key used for cryptographic operations.
+     * This key is immutable and securely stored within the class.
+     */
     private final DES3SecretKey key;
 
+    /**
+     * Constructs an instance of {@code HsmKey_TDES} with the specified HSM vendor, session, and key.
+     *
+     * @param hsmVendor
+     *            the HSM vendor implementation to be used
+     * @param session
+     *            the session associated with the HSM
+     * @param key
+     *            the cryptographic key, expected to be an instance of {@code DES3SecretKey}
+     */
     HsmKey_TDES(HsmVendor hsmVendor, Session session, Key key) {
         this.hsmVendor = hsmVendor;
         this.session = session;
         this.key = (DES3SecretKey) key;
     }
 
+    /**
+     * Encrypts the provided hexadecimal string data using the specified HSM mechanism.
+     * <p>
+     * This method initializes the encryption operation with the given mechanism and key,
+     * converts the input hexadecimal string to a byte array, performs encryption using the HSM session,
+     * and returns the encrypted result as a hexadecimal string.
+     * 
+     * @param data
+     *            the input data to encrypt, represented as a hexadecimal string
+     * @param hsmMechanism
+     *            the HSM mechanism to use for encryption
+     * @return the encrypted data as a hexadecimal string
+     * @throws TokenException
+     *             if an error occurs during encryption
+     */
     @Override
     public String encrypt(String data, HsmMechanism hsmMechanism) throws TokenException {
         log.debug("data to encrypt: [{}]", data);
@@ -43,6 +81,21 @@ public class HsmKey_TDES implements HsmKey {
         return result;
     }
 
+    /**
+     * Decrypts the given hexadecimal-encoded data using the specified HSM mechanism.
+     * <p>
+     * This method initializes the decryption operation with the provided mechanism and key,
+     * converts the input hexadecimal string to a byte array, performs the decryption using the HSM session,
+     * and returns the decrypted data as a hexadecimal string.
+     *
+     * @param data
+     *            the hexadecimal string representing the encrypted data to be decrypted
+     * @param hsmMechanism
+     *            the HSM mechanism to use for decryption
+     * @return the decrypted data as a hexadecimal string
+     * @throws TokenException
+     *             if an error occurs during the decryption process
+     */
     @Override
     public String decrypt(String data, HsmMechanism hsmMechanism) throws TokenException {
         log.debug("data to decrypt: [{}]", data);
@@ -58,6 +111,21 @@ public class HsmKey_TDES implements HsmKey {
         return result;
     }
 
+    /**
+     * Generates a Message Authentication Code (MAC) for the given data using the specified HSM mechanism.
+     * <p>
+     * This method initializes the signing operation with the provided mechanism and key,
+     * signs the input data, and returns the first 8 characters of the resulting signature
+     * as a hexadecimal string. The input data is expected to be a hexadecimal string.
+     *
+     * @param data
+     *            the input data to be signed, represented as a hexadecimal string
+     * @param hsmMechanism
+     *            the HSM mechanism to use for signing
+     * @return the first 8 characters of the MAC as a hexadecimal string
+     * @throws TokenException
+     *             if an error occurs during the signing operation
+     */
     @Override
     public String mac(String data, HsmMechanism hsmMechanism) throws TokenException {
         log.debug("data to sign: [{}]", data);
@@ -73,6 +141,20 @@ public class HsmKey_TDES implements HsmKey {
         return result;
     }
 
+    /**
+     * Derives a new TDES (Triple DES) key from the current key using the provided data.
+     * <p>
+     * This method creates a key template with specific attributes for encryption, decryption,
+     * signing, and derivation. It then constructs a mechanism using the provided data and
+     * derives a new key using the current session and key. The derived key is returned as
+     * a new {@link HsmKey_TDES} instance.
+     * 
+     * @param data
+     *            the data used for key derivation, typically as input to the mechanism
+     * @return a new {@link HsmKey_TDES} instance representing the derived key
+     * @throws TokenException
+     *             if key derivation fails or a token-related error occurs
+     */
     @Override
     public HsmKey derive(String data) throws TokenException {
         log.debug("data to derive: [{}]", data);
@@ -92,6 +174,19 @@ public class HsmKey_TDES implements HsmKey {
         return new HsmKey_TDES(hsmVendor, session, dkey);
     }
 
+    /**
+     * Wraps the specified target key using the current TDES key and returns the wrapped key as a hexadecimal string.
+     * <p>
+     * This method uses the DES3_ECB mechanism to wrap the provided {@code targetKey}. The wrapped key is returned
+     * as a hexadecimal string representation. The actual key value of the target key is not logged for security
+     * reasons.
+     *
+     * @param targetKey
+     *            the {@link HsmKey} to be wrapped; must be an instance of {@link HsmKey_TDES}
+     * @return the wrapped key as a hexadecimal string
+     * @throws TokenException
+     *             if an error occurs during the key wrapping process
+     */
     @Override
     public String wrapKey(HsmKey targetKey) throws TokenException {
         log.debug("targetKey to wrap: [can't read key value]");
@@ -105,6 +200,20 @@ public class HsmKey_TDES implements HsmKey {
         return result;
     }
 
+    /**
+     * Creates a new TDES (Triple DES) HSM key using the provided hexadecimal string value.
+     * <p>
+     * This method converts the input hexadecimal string to a byte array and initializes
+     * a DES3SecretKey template with appropriate attributes for encryption, decryption,
+     * unwrapping, and signing. The key is then created in the HSM session and wrapped
+     * in an {@link HsmKey_TDES} instance.
+     * 
+     * @param value
+     *            the hexadecimal string representing the key value
+     * @return a new {@link HsmKey_TDES} instance containing the created key
+     * @throws TokenException
+     *             if an error occurs during key creation in the HSM
+     */
     @Override
     public HsmKey createKey(String value) throws TokenException {
         log.debug("value to createKey: [{}]", value);
@@ -122,11 +231,34 @@ public class HsmKey_TDES implements HsmKey {
         return new HsmKey_TDES(hsmVendor, session, dkey);
     }
 
-    Mechanism toMechanism(HsmMechanism hsmMechanism) {
+    /**
+     * Converts the specified {@link HsmMechanism} to a {@link Mechanism} using the default
+     * DES initial vector.
+     *
+     * @param hsmMechanism
+     *            the HSM mechanism to convert
+     * @return the corresponding {@link Mechanism} instance
+     */
+    private Mechanism toMechanism(HsmMechanism hsmMechanism) {
         return toMechanism(hsmMechanism, DES_INITIAL_VECTOR);
     }
 
-    Mechanism toMechanism(HsmMechanism hsmMechanism, String data) {
+    /**
+     * Converts the specified {@link HsmMechanism} and associated data into a {@link Mechanism} object,
+     * using the appropriate parameters based on the mechanism type.
+     * <p>
+     * This method determines the vendor-specific mechanism using {@code hsmVendor}, then selects
+     * the correct parameter type for the mechanism. Supported mechanisms include DES3_CBC, DES3_ECB_ENCRYPT_DATA,
+     * DES3_CBC_ENCRYPT_DATA, DES3_X919_MAC_PTK, and DES3_X919_MAC_GENERAL_PTK. The data string is expected
+     * to be a hexadecimal string and is converted to a byte array for parameter construction.
+     *
+     * @param hsmMechanism
+     *            the high-level HSM mechanism to convert
+     * @param data
+     *            the hexadecimal string data used to construct mechanism parameters
+     * @return the constructed {@link Mechanism} with the appropriate parameters
+     */
+    private Mechanism toMechanism(HsmMechanism hsmMechanism, String data) {
         HsmVendorMechanism changedMechanism = hsmMechanism.getMechanism0(hsmVendor);
 
         Parameters param = switch (changedMechanism) {
