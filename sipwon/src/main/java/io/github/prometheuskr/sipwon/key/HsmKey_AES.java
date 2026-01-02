@@ -39,7 +39,7 @@ public class HsmKey_AES implements HsmKey {
      * This IV is a 32-character string consisting of repeated '0' characters.
      * Note: The length and value of the IV should match the requirements of the AES mode being used.
      */
-    private static final String INITIAL_VECTOR = "0".repeat(32);
+    private static final String INITIAL_VECTOR = String.format("%032d", 0);
 
     /**
      * The HSM (Hardware Security Module) vendor associated with this key.
@@ -289,11 +289,18 @@ public class HsmKey_AES implements HsmKey {
     private Mechanism toMechanism(HsmMechanism hsmMechanism, String data) {
         HsmVendorMechanism changedMechanism = hsmMechanism.getMechanism0(hsmVendor);
 
-        Parameters param = switch (changedMechanism) {
-            case AES_CBC -> new InitializationVectorParameters(Util.hexaString2ByteArray(data));
-            case AES_ECB_ENCRYPT_DATA -> new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
-            default -> null;
-        };
+        Parameters param;
+        switch (changedMechanism) {
+            case AES_CBC:
+                param = new InitializationVectorParameters(Util.hexaString2ByteArray(data));
+                break;
+            case AES_ECB_ENCRYPT_DATA:
+                param = new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
+                break;
+            default:
+                param = null;
+                break;
+        }
 
         return changedMechanism.getMechanism(param);
     }

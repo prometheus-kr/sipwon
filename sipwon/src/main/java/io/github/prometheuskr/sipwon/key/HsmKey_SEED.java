@@ -57,7 +57,7 @@ public class HsmKey_SEED implements HsmKey {
      * The initial vector (IV) used for cryptographic operations, represented as a 32-character string of zeros.
      * This value is typically used to provide an initial state for encryption algorithms that require an IV.
      */
-    private static final String INITIAL_VECTOR = "0".repeat(32);
+    private static final String INITIAL_VECTOR = String.format("%032d", 0);
 
     /**
      * The HSM (Hardware Security Module) vendor associated with this key.
@@ -294,10 +294,15 @@ public class HsmKey_SEED implements HsmKey {
     private Mechanism toMechanism(HsmMechanism hsmMechanism, String data) {
         HsmVendorMechanism changedMechanism = hsmMechanism.getMechanism0(hsmVendor);
 
-        Parameters param = switch (changedMechanism) {
-            case SEED_CBC_PTK -> new InitializationVectorParameters(Util.hexaString2ByteArray(data));
-            default -> null;
-        };
+        Parameters param;
+        switch (changedMechanism) {
+            case SEED_CBC_PTK:
+                param = new InitializationVectorParameters(Util.hexaString2ByteArray(data));
+                break;
+            default:
+                param = null;
+                break;
+        }
         return changedMechanism.getMechanism(param);
     }
 }

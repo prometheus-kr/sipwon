@@ -144,21 +144,33 @@ public class HsmSessionImpl implements HsmSession {
     private Key newVendorKey(HsmKeyType keyType) {
         switch (hsmVendor) {
             case PTK:
-                return switch (keyType) {
-                    case DES -> new DESSecretKey();
-                    case DDES -> new DES2SecretKey();
-                    case TDES -> new DES3SecretKey();
-                    case AES -> new AESSecretKey();
-                    case SEED -> new SEEDSecretKeyPTK();
-                };
+                switch (keyType) {
+                    case DES:
+                        return new DESSecretKey();
+                    case DDES:
+                        return new DES2SecretKey();
+                    case TDES:
+                        return new DES3SecretKey();
+                    case AES:
+                        return new AESSecretKey();
+                    case SEED:
+                        return new SEEDSecretKeyPTK();
+                }
+                break;
             case NFAST:
-                return switch (keyType) {
-                    case DES -> new DESSecretKey();
-                    case DDES -> new DES2SecretKey();
-                    case TDES -> new DES3SecretKey();
-                    case AES -> new AESSecretKey();
-                    case SEED -> new SEEDSecretKey();
-                };
+                switch (keyType) {
+                    case DES:
+                        return new DESSecretKey();
+                    case DDES:
+                        return new DES2SecretKey();
+                    case TDES:
+                        return new DES3SecretKey();
+                    case AES:
+                        return new AESSecretKey();
+                    case SEED:
+                        return new SEEDSecretKey();
+                }
+                break;
         }
 
         return null;

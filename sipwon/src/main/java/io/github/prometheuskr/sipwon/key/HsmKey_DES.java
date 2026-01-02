@@ -46,7 +46,7 @@ public class HsmKey_DES implements HsmKey {
      * This IV is a 16-character string consisting of zeros, which is commonly used as a default value.
      * Note: For security reasons, consider using a random IV in production environments.
      */
-    private static final String INITIAL_VECTOR = "0".repeat(16);
+    private static final String INITIAL_VECTOR = String.format("%016d", 0);
 
     /**
      * The HSM (Hardware Security Module) vendor associated with this key.
@@ -296,11 +296,18 @@ public class HsmKey_DES implements HsmKey {
     private Mechanism toMechanism(HsmMechanism hsmMechanism, String data) {
         HsmVendorMechanism changedMechanism = hsmMechanism.getMechanism0(hsmVendor);
 
-        Parameters param = switch (changedMechanism) {
-            case DES_CBC -> new InitializationVectorParameters(Util.hexaString2ByteArray(data));
-            case DES_ECB_ENCRYPT_DATA -> new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
-            default -> null;
-        };
+        Parameters param;
+        switch (changedMechanism) {
+            case DES_CBC:
+                param = new InitializationVectorParameters(Util.hexaString2ByteArray(data));
+                break;
+            case DES_ECB_ENCRYPT_DATA:
+                param = new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
+                break;
+            default:
+                param = null;
+                break;
+        }
 
         return changedMechanism.getMechanism(param);
     }

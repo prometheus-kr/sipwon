@@ -40,7 +40,7 @@ public class HsmKey_DDES implements HsmKey {
      * The initial vector (IV) used for cryptographic operations, represented as a 16-character string of zeros.
      * This IV is typically used in symmetric encryption algorithms that require a fixed-length initialization vector.
      */
-    private static final String INITIAL_VECTOR = "0".repeat(16);
+    private static final String INITIAL_VECTOR = String.format("%016d", 0);
 
     /**
      * The HSM (Hardware Security Module) vendor associated with this key.
@@ -288,14 +288,27 @@ public class HsmKey_DDES implements HsmKey {
     private Mechanism toMechanism(HsmMechanism hsmMechanism, String data) {
         HsmVendorMechanism changedMechanism = hsmMechanism.getMechanism0(hsmVendor);
 
-        Parameters param = switch (changedMechanism) {
-            case DES3_CBC -> new InitializationVectorParameters(Util.hexaString2ByteArray(data));
-            case DES3_ECB_ENCRYPT_DATA -> new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
-            case DES3_CBC_ENCRYPT_DATA -> new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
-            case DES3_X919_MAC_PTK -> new InitializationVectorParameters(Util.hexaString2ByteArray(data));
-            case DES3_X919_MAC_GENERAL_PTK -> new InitializationVectorParameters(Util.hexaString2ByteArray(data));
-            default -> null;
-        };
+        Parameters param;
+        switch (changedMechanism) {
+            case DES3_CBC:
+                param = new InitializationVectorParameters(Util.hexaString2ByteArray(data));
+                break;
+            case DES3_ECB_ENCRYPT_DATA:
+                param = new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
+                break;
+            case DES3_CBC_ENCRYPT_DATA:
+                param = new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
+                break;
+            case DES3_X919_MAC_PTK:
+                param = new InitializationVectorParameters(Util.hexaString2ByteArray(data));
+                break;
+            case DES3_X919_MAC_GENERAL_PTK:
+                param = new InitializationVectorParameters(Util.hexaString2ByteArray(data));
+                break;
+            default:
+                param = null;
+                break;
+        }
 
         return changedMechanism.getMechanism(param);
     }

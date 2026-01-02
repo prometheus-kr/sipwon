@@ -47,13 +47,21 @@ public class HsmKeyFactory {
         log.debug("key: [{}]", key);
 
         HsmVendorKeyType keyType = HsmVendorKeyType.fromLongValue(key.getKeyType().getLongValue());
-        return switch (keyType) {
-            case DES -> new HsmKey_DES(hsmVendor, session, key);
-            case DDES -> new HsmKey_DDES(hsmVendor, session, key);
-            case TDES -> new HsmKey_TDES(hsmVendor, session, key);
-            case AES -> new HsmKey_AES(hsmVendor, session, key);
-            case SEED, SEED_PTK -> new HsmKey_SEED(hsmVendor, session, key);
-        };
+        switch (keyType) {
+            case DES:
+                return new HsmKey_DES(hsmVendor, session, key);
+            case DDES:
+                return new HsmKey_DDES(hsmVendor, session, key);
+            case TDES:
+                return new HsmKey_TDES(hsmVendor, session, key);
+            case AES:
+                return new HsmKey_AES(hsmVendor, session, key);
+            case SEED:
+            case SEED_PTK:
+                return new HsmKey_SEED(hsmVendor, session, key);
+            default:
+                throw new IllegalArgumentException("Unsupported key type: " + keyType);
+        }
     }
 
     /**
@@ -74,13 +82,26 @@ public class HsmKeyFactory {
     public static HsmKey createTempHsmKey(HsmVendor hsmVendor, Session session, HsmKeyType keyType, String value)
             throws TokenException {
 
-        HsmKey key = switch (keyType) {
-            case DES -> new HsmKey_DES(hsmVendor, session, null);
-            case DDES -> new HsmKey_DDES(hsmVendor, session, null);
-            case TDES -> new HsmKey_TDES(hsmVendor, session, null);
-            case AES -> new HsmKey_AES(hsmVendor, session, null);
-            case SEED -> new HsmKey_SEED(hsmVendor, session, null);
-        };
+        HsmKey key;
+        switch (keyType) {
+            case DES:
+                key = new HsmKey_DES(hsmVendor, session, null);
+                break;
+            case DDES:
+                key = new HsmKey_DDES(hsmVendor, session, null);
+                break;
+            case TDES:
+                key = new HsmKey_TDES(hsmVendor, session, null);
+                break;
+            case AES:
+                key = new HsmKey_AES(hsmVendor, session, null);
+                break;
+            case SEED:
+                key = new HsmKey_SEED(hsmVendor, session, null);
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported key type: " + keyType);
+        }
 
         return key.createKey(value);
     }
