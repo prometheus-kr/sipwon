@@ -5,7 +5,7 @@
 
     <groupId>io.github.prometheus-kr</groupId>
     <artifactId>sipwon</artifactId>
-    <version>1.21.0</version>
+    <version>1.21.1</version>
     <packaging>jar</packaging>
 
     <name>SIPWON</name>

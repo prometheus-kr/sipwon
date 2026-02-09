@@ -287,9 +287,9 @@ public class ModuleConfig {
      * This method is intended to be run in a background thread to continuously monitor the health of the HSM.
      */
     private void doHealthCheck() {
-        final int maxBackoff = 60_000;
+        final int maxBackoff = 60;
         while (true) {
-            int backoff = 10_000;
+            int backoff = 10;
             Util.sleep(backoff);
 
             synchronized (this) {
@@ -301,12 +301,12 @@ public class ModuleConfig {
                             .orElseThrow(() -> new RuntimeException("No token label found"));
                     Session session = getHsmSession(tokenLabel, null);
                     ModuleHelper.closeSession(session);
-                    backoff = 10_000;
+                    backoff = 10;
                 } catch (Exception e) {
                     log.error("HSM Health Check failed: {}", e.getMessage(), e);
                     ModuleHelper.finalize(module);
                     clearCache();
-                    backoff = Math.min(backoff + 10_000, maxBackoff);
+                    backoff = Math.min(backoff + 10, maxBackoff);
                 }
             }
         }
