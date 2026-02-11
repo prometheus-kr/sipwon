@@ -2,17 +2,21 @@ package io.github.prometheuskr.sipwon.session;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import io.github.prometheuskr.sipwon.autoconfig.HsmSessionFactoryRegistry;
 import io.github.prometheuskr.sipwon.constant.HsmKeyType;
 import io.github.prometheuskr.sipwon.key.HsmKey;
 
 @SpringBootTest
 class HsmSessionFactorySpringBootTest {
+
     @Autowired
-    HsmSessionFactory hsmSessionFactory;
+    HsmSessionFactoryRegistry hsmSessionFactoryRegistry;
 
     @Test
     void contextLoads() {}
@@ -22,6 +26,9 @@ class HsmSessionFactorySpringBootTest {
         String testTokenLabel = "test";
         String testKeyLabel;
         HsmKeyType testKeyType;
+
+        // Get the first HSM configuration (hsm1)
+        HsmSessionFactory hsmSessionFactory = hsmSessionFactoryRegistry.getFactory(testTokenLabel);
 
         if (hsmSessionFactory != null) {
             testKeyLabel = "testAesKey";

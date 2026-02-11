@@ -1,9 +1,17 @@
 sipwon:
-  pkcs11-library-path: cryptoki.dll
-  token-label-and-pin:
-    - token-label: test
-      pin: 1111
-  use-cache-key: false
+  configs:
+    hsm1:
+      pkcs11-library-path: cryptoki.dll
+      token-label-and-pin:
+        - token-label: test
+          pin: 1111
+      use-cache-key: false
+    hsm2:
+      pkcs11-library-path: C:\Program Files\Safenet\ProtectToolkit 7\C SDK\bin\sw\cryptoki.dll
+      token-label-and-pin:
+        - token-label: asdf
+          pin: 1111
+      use-cache-key: false
 
 logging:
   level:

@@ -32,13 +32,4 @@ public interface HsmSessionFactory {
      *             if the session cannot be established or authentication fails
      */
     HsmSession getHsmSession(String tokenLabel, String pin) throws TokenException;
-
-    /**
-     * Checks the status or availability of the HSM (Hardware Security Module).
-     * <p>
-     * This method should perform necessary validation or health checks to ensure
-     * that the HSM is operational and ready for use. Implementations may throw
-     * exceptions if the HSM is not accessible or if any issues are detected.
-     */
-    void checkHsm();
 }

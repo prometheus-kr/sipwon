@@ -272,7 +272,7 @@ public class ModuleConfig {
      * named "HsmHealthCheckSignalThread" to avoid blocking the main execution flow.
      */
     void checkHsm() {
-        new Thread(this::doHealthCheck, "HsmHealthCheckSignalThread").start();
+        new Thread(this::doHealthCheck, "HsmHealthCheckSignalThread"+this.toString()).start();
     }
 
     /**
@@ -287,6 +287,7 @@ public class ModuleConfig {
      * This method is intended to be run in a background thread to continuously monitor the health of the HSM.
      */
     private void doHealthCheck() {
+        log.info("HSM Health Checker started");
         final int maxBackoff = 60;
         while (true) {
             int backoff = 10;
@@ -302,6 +303,7 @@ public class ModuleConfig {
                     Session session = getHsmSession(tokenLabel, null);
                     ModuleHelper.closeSession(session);
                     backoff = 10;
+                    log.debug("HSM Health OK");
                 } catch (Exception e) {
                     log.error("HSM Health Check failed: {}", e.getMessage(), e);
                     ModuleHelper.finalize(module);

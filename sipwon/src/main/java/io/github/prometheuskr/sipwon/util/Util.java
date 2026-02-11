@@ -49,7 +49,7 @@ public class Util {
             HEX_TABLE[i] = String.format("%02X", i);
         }
         if (log.isDebugEnabled())
-            log.debug("HEX_TABLE[{}] = {}", Arrays.toString(HEX_TABLE));
+            log.debug("HEX_TABLE = {}", Arrays.toString(HEX_TABLE));
 
         for (int i = 0; i < 256; i++) {
             int b = i & 0xFE;
@@ -58,7 +58,7 @@ public class Util {
             ODD_PARITY_TABLE[i] = (byte) ((ones % 2) == (i & 0x01) ? (i ^ 0x01) : i);
         }
         if (log.isDebugEnabled())
-            log.debug("hex ODD_PARITY_TABLE[{}] = {}", byteArray2HexaString(ODD_PARITY_TABLE));
+            log.debug("hex ODD_PARITY_TABLE = [{}]", byteArray2HexaString(ODD_PARITY_TABLE));
     }
 
     /**

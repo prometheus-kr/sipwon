@@ -28,6 +28,7 @@ public class HsmSessionFactoryImpl implements HsmSessionFactory {
      */
     public HsmSessionFactoryImpl(ModuleConfig hsmModuleConfig) {
         this.hsmModuleConfig = hsmModuleConfig;
+        hsmModuleConfig.checkHsm();
     }
 
     /**
@@ -58,15 +59,5 @@ public class HsmSessionFactoryImpl implements HsmSessionFactory {
     @Override
     public HsmSession getHsmSession(String tokenLabel, String pin) throws TokenException {
         return new HsmSessionImpl(hsmModuleConfig.getHsmSession(tokenLabel, pin), hsmModuleConfig.getHsmVendor());
-    }
-
-    /**
-     * Checks the status or availability of the HSM (Hardware Security Module) by delegating
-     * the operation to the configured {@code hsmModuleConfig}. This method ensures that the
-     * HSM is properly initialized and ready for cryptographic operations.
-     */
-    @Override
-    public void checkHsm() {
-        hsmModuleConfig.checkHsm();
     }
 }

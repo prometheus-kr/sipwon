@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import io.github.prometheuskr.sipwon.autoconfig.HsmSessionFactoryRegistry;
 import io.github.prometheuskr.sipwon.constant.HsmKeyType;
 import io.github.prometheuskr.sipwon.constant.HsmMechanism;
 import io.github.prometheuskr.sipwon.session.HsmSession;
@@ -19,14 +20,18 @@ class HsmKey_DDESTest {
     private static final String EXPECTED_DOUBLE_ENCRYPTED_STRING = "BA443D2E5BC3BDDE032E1A2F264CA124";
 
     @Autowired
-    HsmSessionFactory hsmSessionFactory;
+    HsmSessionFactoryRegistry hsmSessionFactoryRegistry;
+
+    private HsmSessionFactory getHsmSessionFactory() {
+        return hsmSessionFactoryRegistry.getFactory(tokenLabel);
+    }
 
     private final String tokenLabel = "test";
     private final String keyLabel = "testDes2Key";
 
     @Test
     void encrypt_decrypt() throws Exception {
-        try (HsmSession session = hsmSessionFactory.getHsmSession(tokenLabel)) {
+        try (HsmSession session = getHsmSessionFactory().getHsmSession(tokenLabel)) {
             HsmKey_DDES hsmKey = (HsmKey_DDES) session.findHsmKey(keyLabel, HsmKeyType.DDES);
             String plainHex = PLAIN_STRING_FOR_ENCRYPT;
             String encrypted = hsmKey.encrypt(plainHex, HsmMechanism.DES3_ECB);
@@ -41,7 +46,7 @@ class HsmKey_DDESTest {
 
     @Test
     void mac() throws Exception {
-        try (HsmSession session = hsmSessionFactory.getHsmSession(tokenLabel)) {
+        try (HsmSession session = getHsmSessionFactory().getHsmSession(tokenLabel)) {
             HsmKey_DDES hsmKey = (HsmKey_DDES) session.findHsmKey(keyLabel, HsmKeyType.DDES);
             String data = PLAIN_STRING_FOR_ENCRYPT + PLAIN_STRING_FOR_ENCRYPT;
             String mac = hsmKey.mac(data, HsmMechanism.DES3_MAC);
@@ -58,7 +63,7 @@ class HsmKey_DDESTest {
 
     @Test
     void derive() throws Exception {
-        try (HsmSession session = hsmSessionFactory.getHsmSession(tokenLabel)) {
+        try (HsmSession session = getHsmSessionFactory().getHsmSession(tokenLabel)) {
             HsmKey_DDES hsmKey = (HsmKey_DDES) session.findHsmKey(keyLabel, HsmKeyType.DDES);
             String data = PLAIN_STRING_FOR_ENCRYPT;
             HsmKey derivedKey = hsmKey.derive(data);
@@ -68,7 +73,7 @@ class HsmKey_DDESTest {
 
     @Test
     void wrapKey() throws Exception {
-        try (HsmSession session = hsmSessionFactory.getHsmSession(tokenLabel)) {
+        try (HsmSession session = getHsmSessionFactory().getHsmSession(tokenLabel)) {
             HsmKey_DDES hsmKey = (HsmKey_DDES) session.findHsmKey(keyLabel, HsmKeyType.DDES);
 
             String data = PLAIN_STRING_FOR_ENCRYPT;
