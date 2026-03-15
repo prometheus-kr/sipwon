@@ -1,7 +1,8 @@
 package io.github.prometheuskr.sipwon.key;
 
 import iaik.pkcs.pkcs11.TokenException;
-import io.github.prometheuskr.sipwon.constant.HsmMechanism;
+import io.github.prometheuskr.sipwon.constant.HsmMechanism.HsmCypherMode;
+import io.github.prometheuskr.sipwon.constant.HsmMechanism.HsmMacMode;
 
 /**
  * Represents a cryptographic key managed by a Hardware Security Module (HSM).
@@ -14,50 +15,52 @@ public interface HsmKey {
      *
      * @param data
      *            the plaintext data to be encrypted
-     * @param hsmMechanism
-     *            the cryptographic mechanism to use for encryption
+     * @param mode
+     *            the cryptographic mode to use for encryption
      * @return the encrypted data as a String
      * @throws TokenException
      *             if an error occurs during the encryption process
      */
-    String encrypt(String data, HsmMechanism hsmMechanism) throws TokenException;
+    String encrypt(String data, HsmCypherMode mode) throws TokenException;
 
     /**
      * Decrypts the provided encrypted data using the specified HSM mechanism.
      *
      * @param data
      *            the encrypted data to be decrypted, represented as a String
-     * @param hsmMechanism
-     *            the mechanism to use for decryption, provided by the HSM
+     * @param mode
+     *            the cryptographic mode to use for decryption
      * @return the decrypted data as a String
      * @throws TokenException
      *             if an error occurs during the decryption process
      */
-    String decrypt(String data, HsmMechanism hsmMechanism) throws TokenException;
+    String decrypt(String data, HsmCypherMode mode) throws TokenException;
 
     /**
      * Generates a Message Authentication Code (MAC) for the given data using the specified HSM mechanism.
      *
      * @param data
      *            the input data to be authenticated
-     * @param hsmMechanism
-     *            the cryptographic mechanism to use for MAC generation
+     * @param mode
+     *            the cryptographic mode to use for MAC generation
      * @return the generated MAC as a string
      * @throws TokenException
      *             if an error occurs during MAC generation
      */
-    String mac(String data, HsmMechanism hsmMechanism) throws TokenException;
+    String mac(String data, HsmMacMode mode) throws TokenException;
 
     /**
      * Derives a new {@code HsmKey} instance based on the provided data.
      *
      * @param data
      *            the input data used for key derivation
+     * @param mode
+     *            the encrypt mode to use for key derivation
      * @return a new {@code HsmKey} derived from the input data
      * @throws TokenException
      *             if the key derivation process fails
      */
-    HsmKey derive(String data) throws TokenException;
+    HsmKey derive(String data, HsmCypherMode mode) throws TokenException;
 
     /**
      * Wraps the specified target key using this HSM key.

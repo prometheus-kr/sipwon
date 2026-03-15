@@ -7,8 +7,11 @@ import iaik.pkcs.pkcs11.objects.DES3SecretKey;
 import iaik.pkcs.pkcs11.objects.Key;
 import iaik.pkcs.pkcs11.parameters.InitializationVectorParameters;
 import iaik.pkcs.pkcs11.parameters.KeyDerivationStringDataParameters;
+import iaik.pkcs.pkcs11.parameters.MacGeneralParameters;
 import iaik.pkcs.pkcs11.parameters.Parameters;
 import io.github.prometheuskr.sipwon.constant.HsmMechanism;
+import io.github.prometheuskr.sipwon.constant.HsmMechanism.HsmCypherMode;
+import io.github.prometheuskr.sipwon.constant.HsmMechanism.HsmMacMode;
 import io.github.prometheuskr.sipwon.constant.HsmVendor;
 import io.github.prometheuskr.sipwon.constant.HsmVendorMechanism;
 import io.github.prometheuskr.sipwon.util.Util;
@@ -89,15 +92,20 @@ public class HsmKey_TDES implements HsmKey {
      * 
      * @param data
      *            the input data to encrypt, represented as a hexadecimal string
-     * @param hsmMechanism
-     *            the HSM mechanism to use for encryption
+     * @param mode
+     *            the cryptographic mode to use for encryption (e.g., ECB, CBC)
      * @return the encrypted data as a hexadecimal string
      * @throws TokenException
      *             if an error occurs during encryption
      */
     @Override
-    public String encrypt(String data, HsmMechanism hsmMechanism) throws TokenException {
+    public String encrypt(String data, HsmCypherMode mode) throws TokenException {
         log.debug("data to encrypt: [{}]", data);
+
+        HsmMechanism hsmMechanism = switch (mode) {
+            case ECB -> HsmMechanism.DES3_ECB;
+            case CBC -> HsmMechanism.DES3_CBC;
+        };
 
         Mechanism mechanism = toMechanism(hsmMechanism);
         session.encryptInit(mechanism, key);
@@ -119,15 +127,20 @@ public class HsmKey_TDES implements HsmKey {
      *
      * @param data
      *            the hexadecimal string representing the encrypted data to be decrypted
-     * @param hsmMechanism
-     *            the HSM mechanism to use for decryption
+     * @param mode
+     *            the cryptographic mode to use for decryption (e.g., ECB, CBC)
      * @return the decrypted data as a hexadecimal string
      * @throws TokenException
      *             if an error occurs during the decryption process
      */
     @Override
-    public String decrypt(String data, HsmMechanism hsmMechanism) throws TokenException {
+    public String decrypt(String data, HsmCypherMode mode) throws TokenException {
         log.debug("data to decrypt: [{}]", data);
+
+        HsmMechanism hsmMechanism = switch (mode) {
+            case ECB -> HsmMechanism.DES3_ECB;
+            case CBC -> HsmMechanism.DES3_CBC;
+        };
 
         Mechanism mechanism = toMechanism(hsmMechanism);
         session.decryptInit(mechanism, key);
@@ -144,27 +157,32 @@ public class HsmKey_TDES implements HsmKey {
      * Generates a Message Authentication Code (MAC) for the given data using the specified HSM mechanism.
      * <p>
      * This method initializes the signing operation with the provided mechanism and key,
-     * signs the input data, and returns the first 8 characters of the resulting signature
+     * signs the input data, and returns the first 16 characters of the resulting signature
      * as a hexadecimal string. The input data is expected to be a hexadecimal string.
      *
      * @param data
      *            the input data to be signed, represented as a hexadecimal string
-     * @param hsmMechanism
-     *            the HSM mechanism to use for signing
-     * @return the first 8 characters of the MAC as a hexadecimal string
+     * @param mode
+     *            the cryptographic mode to use for MAC generation (e.g., MAC, X919_MAC)
+     * @return the first 16 characters of the MAC as a hexadecimal string
      * @throws TokenException
      *             if an error occurs during the signing operation
      */
     @Override
-    public String mac(String data, HsmMechanism hsmMechanism) throws TokenException {
+    public String mac(String data, HsmMacMode mode) throws TokenException {
         log.debug("data to sign: [{}]", data);
+
+        HsmMechanism hsmMechanism = switch (mode) {
+            case MAC -> HsmMechanism.DES3_MAC_GENERAL;
+            case X919_MAC -> HsmMechanism.DES3_X919_MAC_GENERAL;
+        };
 
         Mechanism mechanism = toMechanism(hsmMechanism);
         session.signInit(mechanism, key);
 
         byte[] inputData = Util.hexaString2ByteArray(data);
         byte[] signedData = session.sign(inputData);
-        String result = Util.byteArray2HexaString(signedData).substring(0, 8);
+        String result = Util.byteArray2HexaString(signedData).substring(0, 16);
         log.debug("signed result [{}]", result);
 
         return result;
@@ -180,13 +198,20 @@ public class HsmKey_TDES implements HsmKey {
      * 
      * @param data
      *            the data used for key derivation, typically as input to the mechanism
+     * @param mode
+     *            the encryption mode to use for key derivation (e.g., ECB or CBC)
      * @return a new {@link HsmKey_TDES} instance representing the derived key
      * @throws TokenException
      *             if key derivation fails or a token-related error occurs
      */
     @Override
-    public HsmKey derive(String data) throws TokenException {
+    public HsmKey derive(String data, HsmCypherMode mode) throws TokenException {
         log.debug("data to derive: [{}]", data);
+
+        HsmMechanism hsmMechanism = switch (mode) {
+            case ECB -> HsmMechanism.DES3_ECB_ENCRYPT_DATA;
+            case CBC -> HsmMechanism.DES3_CBC_ENCRYPT_DATA;
+        };
 
         DES3SecretKey keyTemplate = new DES3SecretKey();
         keyTemplate.getToken().setBooleanValue(Boolean.FALSE);
@@ -195,7 +220,7 @@ public class HsmKey_TDES implements HsmKey {
         keyTemplate.getSign().setBooleanValue(Boolean.TRUE);
         keyTemplate.getDerive().setBooleanValue(Boolean.TRUE);
 
-        Mechanism mech = toMechanism(HsmMechanism.DES3_ECB_ENCRYPT_DATA, data);
+        Mechanism mech = toMechanism(hsmMechanism, data);
 
         Key dkey = session.deriveKey(mech, key, keyTemplate);
         log.debug("derived key [can't read key value]");
@@ -295,7 +320,8 @@ public class HsmKey_TDES implements HsmKey {
             case DES3_ECB_ENCRYPT_DATA -> new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
             case DES3_CBC_ENCRYPT_DATA -> new KeyDerivationStringDataParameters(Util.hexaString2ByteArray(data));
             case DES3_X919_MAC_PTK -> new InitializationVectorParameters(Util.hexaString2ByteArray(data));
-            case DES3_X919_MAC_GENERAL_PTK -> new InitializationVectorParameters(Util.hexaString2ByteArray(data));
+            case DES3_MAC_GENERAL -> new MacGeneralParameters(8);
+            case DES3_X919_MAC_GENERAL_PTK -> new MacGeneralParameters(8);
             default -> null;
         };
 

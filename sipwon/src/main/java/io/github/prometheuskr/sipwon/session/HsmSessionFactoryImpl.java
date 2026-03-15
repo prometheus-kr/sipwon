@@ -20,36 +20,37 @@ public class HsmSessionFactoryImpl implements HsmSessionFactory {
      */
     private final ModuleConfig hsmModuleConfig;
 
+    private final String tokenLabel;
+
     /**
      * Constructs a new {@code HsmSessionFactoryImpl} with the specified HSM module configuration.
      *
      * @param hsmModuleConfig
      *            the configuration object for the HSM module
+     * @param tokenLabel
+     *            the label of the token for which the HSM session is requested
      */
-    public HsmSessionFactoryImpl(ModuleConfig hsmModuleConfig) {
+    public HsmSessionFactoryImpl(ModuleConfig hsmModuleConfig, String tokenLabel) {
         this.hsmModuleConfig = hsmModuleConfig;
+        this.tokenLabel = tokenLabel;
         hsmModuleConfig.checkHsm();
     }
 
     /**
      * Retrieves an {@link HsmSession} associated with the specified token label.
      *
-     * @param tokenLabel
-     *            the label of the token for which the HSM session is requested
      * @return an {@link HsmSession} instance corresponding to the given token label
      * @throws TokenException
      *             if there is an error obtaining the HSM session
      */
     @Override
-    public HsmSession getHsmSession(String tokenLabel) throws TokenException {
-        return getHsmSession(tokenLabel, null);
+    public HsmSession getHsmSession() throws TokenException {
+        return getHsmSession(null);
     }
 
     /**
-     * Retrieves an {@link HsmSession} instance for the specified token label and PIN.
+     * Retrieves an {@link HsmSession} instance for the specified PIN.
      *
-     * @param tokenLabel
-     *            the label of the HSM token to connect to
      * @param pin
      *            the PIN used to authenticate with the HSM token
      * @return an {@link HsmSession} associated with the given token and PIN
@@ -57,7 +58,7 @@ public class HsmSessionFactoryImpl implements HsmSessionFactory {
      *             if there is an error obtaining the HSM session
      */
     @Override
-    public HsmSession getHsmSession(String tokenLabel, String pin) throws TokenException {
-        return new HsmSessionImpl(hsmModuleConfig.getHsmSession(tokenLabel, pin), hsmModuleConfig.getHsmVendor());
+    public HsmSession getHsmSession(String pin) throws TokenException {
+        return new HsmSessionImpl(hsmModuleConfig.getHsmSession(this.tokenLabel, pin), hsmModuleConfig.getHsmVendor());
     }
 }

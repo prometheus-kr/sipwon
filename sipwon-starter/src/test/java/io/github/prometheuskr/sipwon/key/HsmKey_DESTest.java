@@ -8,7 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import io.github.prometheuskr.sipwon.autoconfig.HsmSessionFactoryRegistry;
 import io.github.prometheuskr.sipwon.constant.HsmKeyType;
-import io.github.prometheuskr.sipwon.constant.HsmMechanism;
+import io.github.prometheuskr.sipwon.constant.HsmMechanism.HsmCypherMode;
+import io.github.prometheuskr.sipwon.constant.HsmMechanism.HsmMacMode;
 import io.github.prometheuskr.sipwon.session.HsmSession;
 import io.github.prometheuskr.sipwon.session.HsmSessionFactory;
 
@@ -19,48 +20,48 @@ class HsmKey_DESTest {
     private final String keyLabel = "testDesKey";
     private static final String PLAIN_STRING_FOR_ENCRYPT = "31323334353637383132333435363738";
 
-
     @Autowired
     HsmSessionFactoryRegistry hsmSessionFactoryRegistry;
 
     private HsmSessionFactory getHsmSessionFactory() {
         return hsmSessionFactoryRegistry.getFactory(tokenLabel);
     }
+
     @Test
     void encrypt_decrypt() throws Exception {
-        try (HsmSession session = getHsmSessionFactory().getHsmSession(tokenLabel)) {
+        try (HsmSession session = getHsmSessionFactory().getHsmSession()) {
             HsmKey_DES hsmKey = (HsmKey_DES) session.findHsmKey(keyLabel, HsmKeyType.DES);
-            String encrypted = hsmKey.encrypt(PLAIN_STRING_FOR_ENCRYPT, HsmMechanism.DES_CBC);
+            String encrypted = hsmKey.encrypt(PLAIN_STRING_FOR_ENCRYPT, HsmCypherMode.CBC);
             assertThat(encrypted).isNotNull();
 
-            String decrypted = hsmKey.decrypt(encrypted, HsmMechanism.DES_CBC);
+            String decrypted = hsmKey.decrypt(encrypted, HsmCypherMode.CBC);
             assertThat(decrypted).isEqualTo(PLAIN_STRING_FOR_ENCRYPT);
         }
     }
 
     @Test
     void mac() throws Exception {
-        try (HsmSession session = getHsmSessionFactory().getHsmSession(tokenLabel)) {
+        try (HsmSession session = getHsmSessionFactory().getHsmSession()) {
             HsmKey_DES hsmKey = (HsmKey_DES) session.findHsmKey(keyLabel, HsmKeyType.DES);
-            String mac = hsmKey.mac(PLAIN_STRING_FOR_ENCRYPT, HsmMechanism.DES_MAC);
+            String mac = hsmKey.mac(PLAIN_STRING_FOR_ENCRYPT, HsmMacMode.MAC);
             assertThat(mac).isNotNull();
         }
     }
 
     @Test
     void derive() throws Exception {
-        try (HsmSession session = getHsmSessionFactory().getHsmSession(tokenLabel)) {
+        try (HsmSession session = getHsmSessionFactory().getHsmSession()) {
             HsmKey_DES hsmKey = (HsmKey_DES) session.findHsmKey(keyLabel, HsmKeyType.DES);
-            HsmKey derivedKey = hsmKey.derive(PLAIN_STRING_FOR_ENCRYPT);
+            HsmKey derivedKey = hsmKey.derive(PLAIN_STRING_FOR_ENCRYPT, HsmCypherMode.ECB);
             assertThat(derivedKey).isNotNull();
         }
     }
 
     @Test
     void wrapKey() throws Exception {
-        try (HsmSession session = getHsmSessionFactory().getHsmSession(tokenLabel)) {
+        try (HsmSession session = getHsmSessionFactory().getHsmSession()) {
             HsmKey_DES hsmKey = (HsmKey_DES) session.findHsmKey(keyLabel, HsmKeyType.DES);
-            HsmKey dKey = hsmKey.derive(PLAIN_STRING_FOR_ENCRYPT);
+            HsmKey dKey = hsmKey.derive(PLAIN_STRING_FOR_ENCRYPT, HsmCypherMode.ECB);
             String wrapped = hsmKey.wrapKey(dKey);
             assertThat(wrapped).isNotNull();
         }

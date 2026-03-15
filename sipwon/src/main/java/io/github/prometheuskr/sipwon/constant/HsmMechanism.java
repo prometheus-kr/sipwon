@@ -136,4 +136,12 @@ public enum HsmMechanism {
 
         return mechanism0;
     }
+
+    public static enum HsmCypherMode {
+        ECB, CBC
+    }
+
+    public static enum HsmMacMode {
+        MAC, X919_MAC
+    }
 }

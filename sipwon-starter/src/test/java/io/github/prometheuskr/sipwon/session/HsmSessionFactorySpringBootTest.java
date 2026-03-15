@@ -33,7 +33,7 @@ class HsmSessionFactorySpringBootTest {
         if (hsmSessionFactory != null) {
             testKeyLabel = "testAesKey";
             testKeyType = HsmKeyType.AES;
-            try (HsmSession session = hsmSessionFactory.getHsmSession(testTokenLabel)) {
+            try (HsmSession session = hsmSessionFactory.getHsmSession()) {
                 assertNotNull(session, "HsmSession은 null이 아니어야 합니다.");
                 try {
                     HsmKey key = session.findHsmKey(testKeyLabel, testKeyType);
@@ -44,7 +44,7 @@ class HsmSessionFactorySpringBootTest {
 
             testKeyLabel = "testSeedKey";
             testKeyType = HsmKeyType.SEED;
-            try (HsmSession session = hsmSessionFactory.getHsmSession(testTokenLabel)) {
+            try (HsmSession session = hsmSessionFactory.getHsmSession()) {
                 assertNotNull(session, "HsmSession은 null이 아니어야 합니다.");
                 try {
                     HsmKey key = session.findHsmKey(testKeyLabel, testKeyType);

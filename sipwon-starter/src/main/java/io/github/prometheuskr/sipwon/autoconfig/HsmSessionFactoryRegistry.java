@@ -84,13 +84,12 @@ public class HsmSessionFactoryRegistry {
                                         HsmProperties.TokenPin::getTokenLabel,
                                         HsmProperties.TokenPin::getPin)),
                         config.getUseCacheKey());
-                HsmSessionFactory factory = new HsmSessionFactoryImpl(moduleConfig);
 
                 // Store factory by name
                 List<String> tokenLabels = config.getTokenLabelAndPin().stream()
                         .map(HsmProperties.TokenPin::getTokenLabel)
                         .collect(Collectors.toList());
-                registerFactory(tokenLabels, factory);
+                registerFactory(tokenLabels, moduleConfig);
 
             } catch (TokenException | IOException e) {
                 throw new RuntimeException(
@@ -107,9 +106,9 @@ public class HsmSessionFactoryRegistry {
      * @param factory
      *            the HSM session factory to register
      */
-    private void registerFactory(List<String> tokenLabels, HsmSessionFactory factory) {
+    private void registerFactory(List<String> tokenLabels, ModuleConfig moduleConfig) {
         for (String tokenLabel : tokenLabels) {
-            tokenLabelToFactories.computeIfAbsent(tokenLabel, k -> new ArrayList<>()).add(factory);
+            tokenLabelToFactories.computeIfAbsent(tokenLabel, k -> new ArrayList<>()).add(new HsmSessionFactoryImpl(moduleConfig, tokenLabel));
         }
     }
 
