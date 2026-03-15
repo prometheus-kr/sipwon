@@ -68,9 +68,9 @@ class HsmKey_DDESTest {
             HsmKey_DDES hsmKey = (HsmKey_DDES) session.findHsmKey(keyLabel, HsmKeyType.DDES);
             String data = PLAIN_STRING_FOR_ENCRYPT;
             HsmKey derivedKey = hsmKey.derive(data, HsmCypherMode.CBC);
-             derivedKey = derivedKey.derive(data, HsmCypherMode.ECB);
-             derivedKey = derivedKey.derive(data, HsmCypherMode.ECB);
-             derivedKey = derivedKey.derive(data, HsmCypherMode.CBC);
+            derivedKey = derivedKey.derive(data, HsmCypherMode.ECB);
+            derivedKey = derivedKey.derive(data, HsmCypherMode.ECB);
+            derivedKey = derivedKey.derive(data, HsmCypherMode.CBC);
             assertThat(derivedKey).isNotNull();
         }
     }

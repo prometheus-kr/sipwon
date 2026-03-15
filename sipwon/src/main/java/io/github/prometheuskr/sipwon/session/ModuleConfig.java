@@ -272,7 +272,7 @@ public class ModuleConfig {
      * named "HsmHealthCheckSignalThread" to avoid blocking the main execution flow.
      */
     void checkHsm() {
-        new Thread(this::doHealthCheck, "HsmHealthCheckSignalThread"+this.toString()).start();
+        new Thread(this::doHealthCheck, "HsmHealthCheckSignalThread" + this.toString()).start();
     }
 
     /**

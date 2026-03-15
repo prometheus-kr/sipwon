@@ -108,7 +108,8 @@ public class HsmSessionFactoryRegistry {
      */
     private void registerFactory(List<String> tokenLabels, ModuleConfig moduleConfig) {
         for (String tokenLabel : tokenLabels) {
-            tokenLabelToFactories.computeIfAbsent(tokenLabel, k -> new ArrayList<>()).add(new HsmSessionFactoryImpl(moduleConfig, tokenLabel));
+            tokenLabelToFactories.computeIfAbsent(tokenLabel, k -> new ArrayList<>())
+                    .add(new HsmSessionFactoryImpl(moduleConfig, tokenLabel));
         }
     }
 
