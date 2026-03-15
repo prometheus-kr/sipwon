@@ -20,6 +20,11 @@ import io.github.prometheuskr.sipwon.config.HsmProperties;
 public class SipwonAutoConfiguration {
 
     /**
+     * Default constructor for {@code SipwonAutoConfiguration}.
+     */
+    public SipwonAutoConfiguration() {}
+
+    /**
      * Creates a {@link HsmSessionFactoryRegistry} that provides token label-based lookup
      * of HSM session factories with round-robin load balancing.
      * <p>

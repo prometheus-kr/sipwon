@@ -9,7 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * Configuration properties for HSM (Hardware Security Module) integration.
@@ -33,7 +32,6 @@ import lombok.NoArgsConstructor;
  * @author Prometheus
  */
 @Data
-@NoArgsConstructor
 @ConfigurationProperties(prefix = "sipwon")
 public class HsmProperties {
     /**
@@ -41,6 +39,11 @@ public class HsmProperties {
      * PKCS#11 library path, token label and PIN pairs, and cache key settings.
      */
     private Map<String, HsmConfig> configs = new HashMap<>();
+
+    /**
+     * Default constructor for {@code HsmProperties}.
+     */
+    public HsmProperties() {}
 
     /**
      * Individual HSM configuration containing all necessary settings for a single HSM device.
@@ -53,9 +56,13 @@ public class HsmProperties {
      * </ul>
      */
     @Data
-    @NoArgsConstructor
     @AllArgsConstructor
     public static class HsmConfig {
+        /**
+         * Default constructor for {@code HsmConfig}.
+         */
+        public HsmConfig() {}
+
         /**
          * The file system path to the PKCS#11 library used for hardware security module (HSM) integration.
          * This property specifies the location of the native library required to interface with the HSM device.
@@ -87,9 +94,13 @@ public class HsmProperties {
      * typically used for authentication or secure access to hardware security modules (HSM).
      */
     @Data
-    @NoArgsConstructor
     @AllArgsConstructor
     public static class TokenPin {
+        /**
+         * Default constructor for {@code TokenPin}.
+         */
+        public TokenPin() {}
+
         /**
          * The label used to identify the token within the HSM (Hardware Security Module).
          * This is typically used to select or reference a specific token for cryptographic operations.

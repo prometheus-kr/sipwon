@@ -137,11 +137,23 @@ public enum HsmMechanism {
         return mechanism0;
     }
 
+    /**
+     * Cipher block modes supported by HSM mechanisms.
+     */
     public static enum HsmCypherMode {
-        ECB, CBC
+        /** Electronic Codebook mode */
+        ECB,
+        /** Cipher Block Chaining mode */
+        CBC
     }
 
+    /**
+     * MAC (Message Authentication Code) modes supported by HSM mechanisms.
+     */
     public static enum HsmMacMode {
-        MAC, X919_MAC
+        /** Standard MAC */
+        MAC,
+        /** ANSI X9.19 MAC (Retail MAC) */
+        X919_MAC
     }
 }
